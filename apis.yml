@@ -93,6 +93,8 @@ generated:
   confidence: 97
   at: '2026-08-11T12:17:03.986Z'
 common:
+- type: MCPServer
+  url: mcp/infer-by-flow7-mcp.yml
 - type: DomainSecurity
   url: security/infer-by-flow7-domain-security.yml
 - type: DeveloperPortal
