@@ -1,0 +1,50 @@
+name: Infer by Flow7
+description: >-
+  A single Responses-compatible inference API that fronts multiple model families through a private, opaque supplier
+  pool. Public paid beta offering a prepaid-wallet billing model, locked prices, spending limits, and per-call receipts
+  for accountable coding-agent inference.
+url: https://infer-by-flow7.apievangelist.com/apis.yml
+created: '2026-08-11'
+modified: '2026-08-11'
+specificationVersion: '0.21'
+tags:
+  - AI/ML inference
+  - LLM API gateway
+  - Responses-compatible API
+  - Coding-agent tooling
+  - Developer tools
+  - Usage-based billing
+  - Prepaid billing
+apis:
+  - name: Infer Responses API
+    description: >-
+      Responses-compatible inference REST API fronting many model families through opaque routing, with unauthenticated
+      public catalog/status endpoints and authenticated model-list and Responses endpoints. Includes a public OpenAPI
+      3.1 contract, RFC 9727 api-catalog, llms.txt, and three published agent skills.
+    humanURL: https://infer.flow7.org/docs
+    baseURL: https://infer.flow7.org/v1
+    tags:
+      - AI/ML inference
+      - LLM API gateway
+      - Responses-compatible API
+      - Coding-agent tooling
+      - Developer tools
+      - Usage-based billing
+      - Prepaid billing
+    properties:
+      - type: OpenAPI
+        url: https://infer.flow7.org/openapi-public.json
+      - type: Documentation
+        url: https://infer.flow7.org/docs
+      - type: LLMsTxt
+        url: https://infer.flow7.org/llms.txt
+      - type: AgentSkill
+        url: https://infer.flow7.org/.well-known/agent-skills/index.json
+maintainers:
+  - FN: Infer by Flow7
+    url: https://infer.flow7.org
+generated:
+  by: apis.io/add
+  model: claude-opus-4-8
+  confidence: 97
+  at: '2026-08-11T12:17:03.986Z'
