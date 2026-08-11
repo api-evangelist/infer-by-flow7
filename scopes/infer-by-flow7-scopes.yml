@@ -1,0 +1,33 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  https://infer.flow7.org/openapi-public.json (listModels description) and https://infer.flow7.org/docs
+description: >-
+  Infer publishes a permission scope on its API keys, but it is NOT OAuth 2.0. There is no
+  authorization server (both /.well-known/oauth-authorization-server and
+  /.well-known/openid-configuration return 404), no token endpoint and no consent flow. The scope is a
+  property attached to a workspace API key at creation time. This file records that honestly rather
+  than leaving a documented permission model unrecorded.
+oauth2: false
+authorization_server: null
+scheme: api-key-permission-scopes
+scope_count: 1
+scopes:
+  - name: inference:write
+    description: >-
+      Required for the authenticated operations. Infer's OpenAPI states on listModels: "The key must
+      carry the inference:write scope." createResponse uses the same bearerAuth scheme.
+    operations:
+      - listModels
+      - createResponse
+    granted_by: key creation inside a verified workspace
+derived_from:
+  - openapi/infer-by-flow7-public-api-openapi.yml
+notes:
+  - >-
+    derive-oauth-scopes.py yields nothing for this provider by design — there is no oauth2
+    securityScheme in the contract to derive from.
+  - >-
+    Spend ceilings (per-key daily and monthly microdollar limits) act as a second, orthogonal
+    authorization axis. They are recorded in authentication/ and rate-limits/, not here, because they
+    limit cost rather than capability.

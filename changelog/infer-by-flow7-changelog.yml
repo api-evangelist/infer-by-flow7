@@ -1,0 +1,97 @@
+generated: '2026-08-11'
+method: searched
+source: https://infer.flow7.org/feed.xml (RSS, HTTP 200) — "Infer by Flow7 Route Notes"
+description: >-
+  Infer publishes no conventional API changelog. What it publishes instead is a dated "Route Notes"
+  feed of bounded production records — each one a specific test with exact receipts, charges, client
+  versions and an explicit statement of what the record does NOT prove. It functions as a changelog
+  in that every entry is dated and version-pinned, but it documents observed behavior rather than
+  API changes.
+scheme: dated engineering notes (RSS), not semantic release notes
+feed: https://infer.flow7.org/feed.xml
+feed_type: application/rss+xml
+html_changelog: none
+current_api_version: '0.4.0'
+current_api_version_source: info.version in https://infer.flow7.org/openapi-public.json
+breaking_change_policy: none published
+entry_count_at_probe: 6
+window: 2026-08-11 (all six entries fall on a single day — the product is days old)
+entries:
+  - id: route-note-005
+    title: 'Route Note 005 - One request ran. Seven hit the $0.01 spend ceiling.'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling
+    kind: production record
+    breaking: false
+    highlights:
+      - One admitted live request and seven concurrent contenders rejected against a $0.010000 daily/monthly key ceiling.
+      - Contenders returned HTTP 429 daily_budget_exceeded in 553.380-556.326 ms; dispatch spread 0.638 ms.
+      - Holder settled at 43 microdollars; 9,957 microdollars returned to the wallet at settlement.
+      - Records committed-spend enforcement, not merely a database lock collision.
+  - id: compatibility-update
+    title: 'Compatibility update - five pinned clients checked against Infer''s Responses API'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/compatibility
+    kind: compatibility record
+    breaking: false
+    highlights:
+      - Codex CLI 0.146.0, OpenCode 1.18.16, Pydantic AI 2.27.1, langchain-openai 1.4.3, AI SDK 7.0.59 with @ai-sdk/openai 4.0.37.
+      - Separates configuration, direct Responses calls, SSE, tool round trip, structured output, session affinity and live routing.
+      - 18 receipts totalling $0.026965 of customer charge.
+  - id: route-note-004
+    title: 'Route Note 004 - Codex and OpenCode completed bounded live Responses runs'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/notes/codex-opencode-live-responses-record
+    kind: production record
+    breaking: false
+    highlights:
+      - Three streamed production requests through infer/gpt-5.6-terra:balanced.
+      - Exact receipts, usage, charges, and revoked bounded keys recorded.
+  - id: route-note-003
+    title: 'Route Note 003 - OpenCode 1.18.16 against a custom Responses provider'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/notes/opencode-1-18-16-custom-responses-provider
+    kind: production record
+    breaking: false
+    highlights:
+      - OpenCode sent title and main requests directly to /v1/responses in a local capture.
+      - Isolated SSE and mocked tool-loop checks passed; structured output untested at publication.
+  - id: route-note-002
+    title: 'Route Note 002 - Test a Codex provider without sharing your API key'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/notes/test-a-codex-provider-without-sharing-your-key
+    kind: tooling release
+    breaking: false
+    highlights:
+      - Published the local Codex provider doctor with a credential-free first pass.
+      - Public Infer routes were unavailable at publication.
+  - id: route-note-001
+    title: 'Route Note 001 - Codex config and route sheet'
+    date: '2026-08-11'
+    url: https://infer.flow7.org/notes/codex-config-and-route-sheet
+    kind: tooling release
+    breaking: false
+    highlights:
+      - Shipped a Codex custom-provider config generator and a current-price route sheet.
+      - Public routes, registration and funding were unavailable at publication.
+document_versions:
+  - document: Terms of Service
+    url: https://infer.flow7.org/terms
+    versioned: true
+  - document: Privacy Notice
+    url: https://infer.flow7.org/privacy
+    versioned: true
+  - document: Refund Policy
+    url: https://infer.flow7.org/refunds
+    version: '2026-08-08'
+    effective: '2026-08-08'
+  - document: Compatibility record
+    url: https://infer.flow7.org/compatibility
+    checked: '2026-08-11'
+notes:
+  - >-
+    Every legal document is explicitly versioned with an effective date, and the Terms commit to
+    reasonable email or dashboard notice for a materially adverse change. That is a stronger change
+    commitment than the API surface itself carries.
+related:
+  - lifecycle/infer-by-flow7-lifecycle.yml

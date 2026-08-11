@@ -1,0 +1,167 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  https://infer.flow7.org/docs plus https://infer.flow7.org/openapi-public.json — the cross-cutting
+  request/response semantics that apply across Infer's operations rather than to any single one.
+description: >-
+  How the Infer API behaves across every call: Bearer auth, a first-class Idempotency-Key with an
+  unusual terminal-failure rule, session affinity for route stickiness, X-Request-ID tracing, a
+  flat error envelope, a per-request receipt with a price version, and a spend reservation that is
+  taken BEFORE the request runs. There is no pagination and no field expansion — the surface is four
+  operations, none of them collection-paged.
+base_url: https://infer.flow7.org/v1
+api_style: REST over HTTPS, JSON requests and responses, optional SSE (text/event-stream) on the inference call
+wire_compatibility: >-
+  Deliberately shaped as an OpenAI Responses-compatible endpoint so an unmodified Responses client
+  works against a custom base URL. Infer's own compatibility record (checked 2026-08-11) documents
+  Codex CLI 0.146.0, OpenCode 1.18.16, Pydantic AI 2.27.1, langchain-openai 1.4.3 and Vercel AI SDK
+  7.0.59 with @ai-sdk/openai 4.0.37 posting to /v1/responses with no Chat Completions fallback.
+
+authentication:
+  scheme: HTTP Bearer
+  header: "Authorization: Bearer <key>"
+  key_scope: workspace, environment-bound (sandbox or live), requires inference:write
+  docs: https://infer.flow7.org/docs
+  detail: authentication/infer-by-flow7-authentication.yml
+
+idempotency:
+  supported: true
+  mechanism: Idempotency-Key request header
+  body_fallback: idempotency_key (the header wins when both are present)
+  applies_to: POST /v1/responses
+  key_format: client-supplied string, 1-200 characters
+  scope: organization + API-key environment
+  default_behavior: >-
+    Infer generates a one-use value when the header is omitted. Clients that may retry are told to
+    send one explicitly.
+  conflict_behavior: >-
+    HTTP 409 when the key is in progress (request_in_progress), expired, or otherwise cannot be
+    replayed.
+  terminal_failure_rule: >-
+    UNUSUAL AND LOAD-BEARING — a failed operation KEEPS its key as a terminal failure record. Retrying
+    the same operation requires a NEW key. The published error code for this is
+    request_failed_use_new_idempotency_key. This inverts the more common "retry with the same key"
+    expectation, so a client that blindly re-sends the original key after a failure will be rejected.
+  replay_signal: relay.idempotent_replay (boolean) on the response object
+  retention: not published
+  docs: https://infer.flow7.org/docs
+
+session_affinity:
+  supported: true
+  mechanism: relay.session_id in the JSON body, or the X-Session-Affinity request header
+  precedence: relay.session_id wins over the header; a top-level session_id is accepted for compatibility
+  max_length: 200
+  behavior: >-
+    While a session identifier is supplied the session stays on the same private route for as long as
+    that route remains healthy. This is the only client-visible handle on Infer's otherwise opaque
+    routing.
+  observed: >-
+    Infer's compatibility record shows two OpenCode production requests persisting one session through
+    x-session-affinity.
+
+pagination:
+  supported: false
+  note: >-
+    No paged collection exists in the public contract. GET /v1/models returns a complete
+    {"object":"list","data":[...]} envelope with no cursor, limit or has_more field, and
+    /api/public/catalog returns the full model array in one document (22 models at probe time).
+
+field_expansion:
+  supported: false
+metadata:
+  supported: false
+  note: >-
+    No arbitrary key/value metadata bag. relay.session_id and a client request_id are the only
+    caller-supplied correlation fields.
+
+request_tracing:
+  request_id_header: X-Request-ID
+  returned_on: every documented response including every error
+  client_supplied: >-
+    The header is described as "generated or safely accepted by Infer" — a client value may be
+    accepted. A client correlation value can also be sent as request_id in the body.
+  error_echo: the flat error object carries request_id as a required field (nullable)
+
+versioning:
+  api_version: '0.4.0'
+  style: >-
+    Path-prefixed major surface (/v1) plus a document version in info.version. No version request
+    header and no date-pinned version parameter.
+  price_versioning: >-
+    Separate and more granular than the API version. Every priced call resolves a price_version
+    string (e.g. live-beta-mode-...-balanced) which is locked before the request starts and echoed on
+    both the response and the receipt. Infer's Terms state the recorded price version controls an
+    accepted request.
+  detail: lifecycle/infer-by-flow7-lifecycle.yml
+
+error_envelope:
+  format: bespoke flat JSON object (NOT RFC 9457 application/problem+json)
+  media_type: application/json
+  shape:
+    error:
+      code: string (required) — stable machine token, e.g. invalid_api_key
+      message: string (required) — human readable
+      request_id: string or null (required)
+  additional_properties: allowed on the error detail
+  detail: errors/infer-by-flow7-problem-types.yml
+
+rate_limit_signaling:
+  status: 429
+  headers:
+    Retry-After: integer seconds, documented as supplied "for coarse request-rate limits"
+    X-Request-ID: correlation id on the throttled response
+  note: >-
+    429 is overloaded — it covers BOTH request-rate throttling and API-key spend-ceiling rejection
+    (daily_budget_exceeded). Retry-After is only promised for the rate case, so a client must read the
+    error code to tell a "slow down" from a "you are out of budget".
+  detail: rate-limits/infer-by-flow7-rate-limits.yml
+
+spend_and_receipts:
+  reservation_model: >-
+    Infer holds the maximum estimated cost BEFORE the request starts, then charges the actual amount
+    and returns the remainder to the wallet at settlement. A 402 (insufficient_credits) is therefore
+    raised against the reservation, not the final price.
+  receipt: >-
+    Every completed response carries a relay block with receipt_id, price_version, tier,
+    resolved_model_class, cache_status, environment, provider_disclosed and customer_cost_usd.
+  opacity_contract: >-
+    relay.provider_disclosed is a const false in the schema. The upstream supplier identity is never
+    returned, by design and by contract.
+  model_resolution: >-
+    The echoed `model` field is the requested Infer selector, not what ran. relay.resolved_model_class
+    names the class that actually completed. A client that asserts on `model` for a dynamic selector
+    is reading the wrong field.
+
+streaming:
+  supported: true
+  mechanism: "stream: true on the request body; response content type text/event-stream"
+  honesty_note: >-
+    Infer explicitly documents that it currently ASSEMBLES the completed upstream result into an SSE
+    event sequence and that its description "does not promise token-by-token upstream delivery" — so
+    SSE here is a protocol shape, not a latency guarantee.
+
+selector_grammar:
+  pattern: "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$"
+  form: infer/<model-or-dynamic-route>:<price-option>
+  kinds:
+    exact: stays inside one model family, e.g. infer/claude-haiku-4-5:balanced
+    dynamic: resolves at request time, e.g. infer/auto/code:stable
+  wire_vs_customer_naming: >-
+    A trap worth recording — the customer-facing suffixes are :low-cost, :balanced, :stable and
+    :official, but the tier value returned in relay.tier and ModelPrice.tier is enumerated as
+    economy | balanced | priority | official. :low-cost maps to economy and :stable maps to priority.
+    A client that string-compares the requested suffix against the returned tier will mismatch on two
+    of the four options.
+
+privacy_modes:
+  field: relay.privacy
+  values: [standard, no-training, zero-retention]
+  default: standard
+  note: Route eligibility depends on the requested privacy mode; per-tier privacy_modes are published in the catalog.
+
+related:
+  - authentication/infer-by-flow7-authentication.yml
+  - errors/infer-by-flow7-problem-types.yml
+  - lifecycle/infer-by-flow7-lifecycle.yml
+  - rate-limits/infer-by-flow7-rate-limits.yml
+  - sandbox/infer-by-flow7-sandbox.yml

@@ -1,0 +1,103 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  https://infer.flow7.org/terms, https://infer.flow7.org/docs,
+  https://infer.flow7.org/openapi-public.json, https://infer.flow7.org/api/public/status and
+  https://infer.flow7.org/feed.xml
+description: >-
+  Versioning, availability and change posture for a product in public paid beta. Infer runs a
+  machine-readable status resource and a per-service health list, and its Terms carry explicit change
+  and notice commitments. It publishes no deprecation policy, no Sunset/Deprecation headers and no
+  SLA — and it is unusually direct that route continuity is "a routing objective, not an uptime"
+  promise.
+maturity: public paid beta
+api_version: '0.4.0'
+versioning:
+  style: path-prefixed major surface (/v1) plus an info.version document version
+  version_header: none
+  date_pinning: none
+  deprecated_operations: []
+  deprecated_operations_note: >-
+    No operation, parameter or schema in the published contract carries deprecated: true. Derived from
+    openapi/infer-by-flow7-public-api-openapi.yml.
+  price_versioning:
+    present: true
+    mechanism: price_version string per selector per tier, echoed on the response and the receipt
+    contract: >-
+      Terms: "The recorded price version controls an accepted request." Prices may change
+      prospectively; an accepted request is priced at its locked version.
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  provider_statements:
+    - >-
+      Terms: "settings, prices, and availability may change. Infer may remove or restrict a model or
+      route immediately when required by law, security, [or] supplier ... risk."
+    - >-
+      Terms: "Infer may update a model registry when upstream terms change ... When practicable,
+      Infer will give advance notice of materially adverse changes. You must stop using an affected
+      model if you [are notified]."
+    - >-
+      Terms section 18: Infer may update the Terms by posting a new version with an effective date;
+      for a materially adverse change it will provide reasonable email or dashboard notice when
+      practicable.
+  assessment: >-
+    Model-level removal is explicitly immediate and at Infer's discretion. There is no operation-level
+    deprecation window, because the volatile surface here is the model registry, not the four
+    endpoints. A consumer's real deprecation risk is a selector disappearing, which is why the
+    catalog and status resources are the load-bearing lifecycle artifacts.
+status_page:
+  html: https://infer.flow7.org/status
+  machine_readable: https://infer.flow7.org/api/public/status
+  media_type: application/json
+  authenticated: false
+  status_at_probe: operational
+  services_at_probe: 22
+  fields:
+    - environment (sandbox | live)
+    - simulated (boolean — distinguishes sandbox health from live service health)
+    - updated_at (RFC 3339)
+    - status (operational | partial_outage | unavailable)
+    - services[] (per-service status and p95_latency_ms)
+    - note
+  third_party_status_vendor: none
+  note: >-
+    A first-party JSON status resource with per-model p95 latency, declared in the RFC 9727
+    api-catalog as the status link relation for /v1/responses. Infer instructs clients — and its own
+    published agent skills instruct agents — to read it immediately before any paid request.
+sla:
+  published: false
+  uptime_commitment: none
+  provider_statement: >-
+    Terms describe redundancy and continuity as "a routing objective, not an uptime" guarantee. The
+    :stable price option is described as "continuity through a redundancy-oriented route pool", which
+    is a best-effort posture rather than a credited SLA.
+  service_credits: >-
+    Refund Policy section 3: Infer may issue service credit for a service issue where lawful, but
+    service credit does not replace a legally required cash refund.
+availability_semantics:
+  published_repeatedly: true
+  rule: >-
+    "A published catalog entry is not proof that a route is callable." Repeated in llms.txt, in the
+    OpenAPI operation descriptions, on /docs, on /compatibility and inside all three published agent
+    skills. Machine-actionable availability comes from GET /api/public/status and, for an
+    authenticated key, GET /v1/models.
+  official_tier_caveat: >-
+    Every :official selector published a price but returned available=false at probe time — the
+    clearest demonstration of the rule in the provider's own data.
+change_feed:
+  url: https://infer.flow7.org/feed.xml
+  detail: changelog/infer-by-flow7-changelog.yml
+legal_lifecycle:
+  operator_notice: https://infer.flow7.org/legal-operator
+  terms: https://infer.flow7.org/terms
+  privacy: https://infer.flow7.org/privacy
+  dpa: https://infer.flow7.org/dpa
+  subprocessors: https://infer.flow7.org/subprocessors
+  acceptable_use: https://infer.flow7.org/acceptable-use
+  refunds: https://infer.flow7.org/refunds
+  note: >-
+    Terms contemplate operator migration/assignment, disclosed through the Legal Operator Notice —
+    an unusually explicit continuity-of-operator clause for a product this young.

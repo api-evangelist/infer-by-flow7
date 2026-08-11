@@ -1,0 +1,132 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enrichment overlay for the Infer by Flow7 Public API
+  version: 1.0.0
+  x-generated: '2026-08-11'
+  x-method: generated
+  x-source: >-
+    openapi/infer-by-flow7-public-api-openapi.yml plus the artifacts derived and searched alongside it
+    in this repo. This overlay records API Evangelist's enhancements as JSONPath actions; the harvested
+    specification is never mutated.
+  x-description: >-
+    Infer's own contract is already well written, so this overlay adds almost no prose corrections.
+    What it adds is machine-readable cross-links to the runtime semantics OpenAPI cannot express —
+    the terminal-failure idempotency rule, the overloaded 429, the customer-vs-wire tier vocabulary
+    mismatch, and the fact that the price catalog is itself an unauthenticated API.
+extends: openapi/infer-by-flow7-public-api-openapi.yml
+actions:
+  - target: $.info
+    description: Attach the API Evangelist artifact index to the document root.
+    update:
+      x-apievangelist:
+        provider: Infer by Flow7
+        providerId: infer-by-flow7
+        harvested_from: https://infer.flow7.org/openapi-public.json
+        harvested_on: '2026-08-11'
+        artifacts:
+          authentication: authentication/infer-by-flow7-authentication.yml
+          scopes: scopes/infer-by-flow7-scopes.yml
+          conventions: conventions/infer-by-flow7-conventions.yml
+          errors: errors/infer-by-flow7-problem-types.yml
+          rate_limits: rate-limits/infer-by-flow7-rate-limits.yml
+          plans: plans/infer-by-flow7-plans-pricing.yml
+          sandbox: sandbox/infer-by-flow7-sandbox.yml
+          lifecycle: lifecycle/infer-by-flow7-lifecycle.yml
+          conformance: conformance/infer-by-flow7-conformance.yml
+          data_model: data-model/infer-by-flow7-data-model.yml
+          changelog: changelog/infer-by-flow7-changelog.yml
+          packages: packages/infer-by-flow7-packages.yml
+          skills: skills/_index.yml
+          well_known: well-known/infer-by-flow7-well-known.yml
+          security: security/infer-by-flow7-domain-security.yml
+  - target: $.info
+    description: Record the discovery documents the provider serves, so a consumer of the spec alone can find them.
+    update:
+      x-discovery:
+        api_catalog: https://infer.flow7.org/.well-known/api-catalog
+        api_catalog_spec: RFC 9727
+        apis_json: https://infer.flow7.org/.well-known/apis.json
+        llms_txt: https://infer.flow7.org/llms.txt
+        agent_skills: https://infer.flow7.org/.well-known/agent-skills/index.json
+        status: https://infer.flow7.org/api/public/status
+  - target: $.paths['/v1/responses'].post.parameters[?(@.name=='Idempotency-Key')]
+    description: >-
+      Flag the terminal-failure rule as a machine-readable retry semantic. The spec states it in prose;
+      a client generator cannot act on prose.
+    update:
+      x-retry-semantics:
+        reuse_key_on_retry: false
+        failed_key_is_terminal: true
+        error_code_on_violation: request_failed_use_new_idempotency_key
+        inverts_common_convention: true
+        note: >-
+          Unlike the Stripe-style convention this header borrows, a retry after a failure MUST use a
+          new key. Reusing the original key returns 409.
+  - target: $.paths['/v1/responses'].post
+    description: Cross-link the spend controls that gate this operation before routing.
+    update:
+      x-spend-controls:
+        reservation: Maximum estimated cost is held before routing; the remainder is returned at settlement.
+        wallet_rejection: 402 insufficient_credits
+        key_ceiling_rejection: 429 daily_budget_exceeded
+        receipt: relay.receipt_id with relay.customer_cost_usd
+        detail: rate-limits/infer-by-flow7-rate-limits.yml
+  - target: $.components.responses.RateLimited
+    description: Disambiguate the overloaded 429 for code generators and agents.
+    update:
+      x-overloaded-status:
+        meanings:
+          - cause: coarse request-rate throttling
+            retry_after_present: true
+          - cause: API-key spend ceiling reached
+            error_code: daily_budget_exceeded
+            retry_after_present: false
+        guidance: Read error.code before choosing a backoff strategy; Retry-After may be absent.
+  - target: $.components.schemas.RelayResponseMetadata.properties.tier
+    description: >-
+      Record the customer-facing to wire-tier mapping. Two of the four values differ from the selector
+      suffix a caller sent, which is a silent mismatch for any client that compares them.
+    update:
+      x-tier-mapping:
+        low-cost: economy
+        balanced: balanced
+        stable: priority
+        official: official
+        warning: >-
+          Do not string-compare the requested selector suffix against relay.tier — :low-cost returns
+          economy and :stable returns priority.
+  - target: $.components.schemas.ResponseObject.properties.model
+    description: Warn that this field echoes the request, not the served model.
+    update:
+      x-resolution-note: >-
+        This is the REQUESTED Infer selector. For a dynamic selector (infer/auto/...) it does not name
+        what ran; read relay.resolved_model_class for that.
+  - target: $.paths['/api/public/catalog'].get
+    description: Mark the unauthenticated price catalog as the provider's machine-readable pricing surface.
+    update:
+      x-pricing-surface:
+        is_rate_card: true
+        authenticated: false
+        replaces: >-
+          There is no /pricing HTML page — it returns 404. This endpoint IS the published rate card.
+        includes:
+          - per-million input, cached-input, cache-write and output rates per selector
+          - per-tier minimum_margin, target_contribution_margin and retry_budget
+          - a dated market reference price and computed discount against the model lab's list price
+        detail: plans/infer-by-flow7-plans-pricing.yml
+  - target: $.paths['/api/public/status'].get
+    description: Mark the status resource as the required preflight for any paid call.
+    update:
+      x-preflight:
+        required_before: POST /v1/responses
+        reason: >-
+          The provider states repeatedly that a published catalog entry is not proof a selector is
+          callable. Availability is dynamic and per-service.
+        detail: lifecycle/infer-by-flow7-lifecycle.yml
+  - target: $.components.securitySchemes.bearerAuth
+    description: Attach the key permission scope, which the scheme itself does not express.
+    update:
+      x-key-scopes:
+        - inference:write
+      x-environments: [sandbox, live]
+      x-detail: authentication/infer-by-flow7-authentication.yml

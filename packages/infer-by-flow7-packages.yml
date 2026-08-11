@@ -1,0 +1,126 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  Registry searches against registry.npmjs.org, pypi.org, rubygems.org, crates.io, api.nuget.org,
+  search.maven.org and pkg.go.dev on 2026-08-11, plus https://infer.flow7.org/docs,
+  https://infer.flow7.org/compatibility and the five /integrations/* pages.
+description: >-
+  Infer publishes NO first-party client SDK in any package registry, and this appears to be a design
+  decision rather than a gap: the API is deliberately shaped as an OpenAI Responses-compatible
+  endpoint so that existing clients work against a custom base URL. Infer's investment went into a
+  dated compatibility record for five pinned third-party clients instead of a library of its own. The
+  only artifact Infer distributes is a versioned Agent Skill archive served from its own host.
+official_package_count: 0
+official_sdk_count: 0
+packages: []
+packages_note: >-
+  Checked and empty, not unchecked. npm search for "flow7" returns one unrelated package
+  (wire-flow7, github.com/wire-flow7); pypi.org/pypi/infer-flow7/json returns 404; no GitHub
+  organization exists (github.com/flow7 is an unrelated 2013 personal account with no link to this
+  product, github.com/flow7-org 404s) and the GitHub code search for "flow7 infer" returns only this
+  API Evangelist repo.
+provider_hosted_distributions:
+  - name: codex-provider-doctor
+    kind: agent-skill-archive
+    registry: provider-hosted
+    official: true
+    url: https://infer.flow7.org/assets/skills/codex-provider-doctor-0.1.0.tar.gz
+    version: 0.1.0
+    version_source: pinned in the distribution URL and in the /tools/codex-provider-doctor page header
+    published: '2026-08-11'
+    published_source: >-
+      Route Note 002 (https://infer.flow7.org/notes/test-a-codex-provider-without-sharing-your-key)
+      announced it; the page states "Protocol record: 2026-08-11".
+    http_status: 200
+    content_type: application/gzip
+    size_bytes: 10308
+    digest: sha256:2876c89162b2bfe278682bb7b1d3ed80ad63ea62202d5e90cc37dac51d5b11ba
+    digest_source: https://infer.flow7.org/.well-known/agent-skills/index.json
+    contents:
+      - SKILL.md
+      - agents/openai.yaml
+      - scripts/infer-codex-provider-doctor.py
+    runtime: Python 3.9+, standard library only
+    script_digest: sha256:f3cd64152c5cd72fff5807dc2e9b48c5341c3e0691742bb33208a7787b8bdb8d
+    script_digest_source: https://infer.flow7.org/tools/codex-provider-doctor
+    install: >-
+      DO_NOT_TRACK=1 npx -y skills@1.5.22 add https://infer.flow7.org --skill codex-provider-doctor -g -a codex
+    note: >-
+      Pinned, digest-published and dated — the version IS readable from the distribution, which is the
+      opposite of the usual unpinned-CDN problem. No registry metadata endpoint exists to query
+      because the artifact is served from the provider's own origin, not a package registry.
+  - name: infer-codex-provider
+    kind: agent-skill-md
+    registry: provider-hosted
+    official: true
+    url: https://infer.flow7.org/.well-known/agent-skills/infer-codex-provider/SKILL.md
+    version: null
+    version_note: >-
+      Checked, nothing to record — unlike the archive, this skill-md is served unversioned. The
+      discovery index publishes a SHA-256 digest
+      (sha256:ad221543d11a898bfe3f9a947f877565027bdd1406bd51d8b78963753a2b2031) but no version string,
+      so a consumer can verify integrity but cannot tell which revision they have.
+    published: null
+    http_status: 200
+    saved: skills/infer-by-flow7-infer-codex-provider.md
+  - name: infer-opencode-provider
+    kind: agent-skill-md
+    registry: provider-hosted
+    official: true
+    url: https://infer.flow7.org/.well-known/agent-skills/infer-opencode-provider/SKILL.md
+    version: null
+    version_note: >-
+      Same as above — digest
+      sha256:acf5773eaa0abbc4231ab05dc2c2fb2154c55fdab9765310d01ce53c2dee0883 published, no version
+      string.
+    published: null
+    http_status: 200
+    saved: skills/infer-by-flow7-infer-opencode-provider.md
+third_party_clients:
+  note: >-
+    NOT Infer packages. These are third-party libraries Infer has tested against its endpoint and
+    pinned by exact version in its published compatibility record (checked 2026-08-11). Recorded
+    because for this provider they take the place of an SDK, and because the pinning is itself the
+    integration contract.
+  source: https://infer.flow7.org/compatibility
+  clients:
+    - name: Codex CLI
+      version_tested: 0.146.0
+      registry: n/a
+      integration: custom model_provider block in ~/.codex/config.toml, wire_api = "responses"
+      docs: https://infer.flow7.org/integrations/codex
+    - name: OpenCode
+      version_tested: 1.18.16
+      registry: n/a
+      integration: custom provider in opencode.json via npm @ai-sdk/openai
+      docs: https://infer.flow7.org/integrations/opencode
+    - name: Pydantic AI
+      version_tested: 2.27.1
+      registry: pypi
+      integration: OpenAIResponsesModel through a custom OpenAIProvider
+      docs: https://infer.flow7.org/integrations/pydantic-ai
+    - name: langchain-openai
+      version_tested: 1.4.3
+      registry: pypi
+      integration: ChatOpenAI with a custom base URL and use_responses_api=True
+      docs: https://infer.flow7.org/integrations/langchain
+    - name: Vercel AI SDK
+      version_tested: 7.0.59
+      companion: '@ai-sdk/openai 4.0.37'
+      registry: npm
+      integration: createOpenAI with a custom base URL and explicit .responses()
+      docs: https://infer.flow7.org/integrations/vercel-ai-sdk
+  caveat: >-
+    Infer states in every cell that a working custom base URL "is not a native integration,
+    certification, or supplier attestation", and that Infer is not a first-class provider in
+    LangChain, Pydantic AI or the AI SDK.
+installer_dependency:
+  name: skills
+  registry: npm
+  version: 1.5.22
+  published: '2026-08-05'
+  repository: https://github.com/vercel-labs/skills
+  official: false
+  note: >-
+    Third-party CLI (branded "Open Agent Skills CLI" on Infer's page) used to install the archive.
+    Version confirmed against registry.npmjs.org; 1.5.22 is also the current latest tag.

@@ -1,0 +1,134 @@
+generated: '2026-08-11'
+method: probed
+source: >-
+  https://infer.flow7.org/api/public/catalog (HTTP 200, application/json, machine-readable price
+  catalog read live 2026-08-11), corroborated by https://infer.flow7.org/docs and
+  https://infer.flow7.org/refunds. There is no /pricing page — it 404s; the catalog endpoint IS the
+  pricing page.
+description: >-
+  Infer sells no subscription tiers. It sells prepaid wallet credit against per-token prices that are
+  published as a machine-readable document, versioned per price, and locked to a request before it
+  runs. The "plans" a buyer chooses between are four PRICE OPTIONS on each model selector, not
+  account plans. This is a genuinely unusual and unusually legible commercial surface: the full rate
+  card, including per-tier margin floors and retry budgets, is served unauthenticated as JSON.
+billing_model: prepaid-wallet (metered, usage-based, no subscription)
+currency: USD
+unit: per_million_tokens
+plan_count: 4
+plan_kind: price-option
+machine_readable_pricing:
+  url: https://infer.flow7.org/api/public/catalog
+  status: 200
+  media_type: application/json
+  authenticated: false
+  schema: PublicCatalog in openapi/infer-by-flow7-public-api-openapi.yml
+  note: >-
+    Returns currency, unit, environment, live_available, a disclosure block, and a models[] array. At
+    probe time: 22 models, kinds exact and dynamic, sourced from Anthropic, DeepSeek, Google,
+    Moonshot AI, OpenAI, Qwen and xAI as reference model labs.
+plans:
+  - name: Low cost
+    selector_suffix: ':low-cost'
+    wire_tier: economy
+    price: usage-based
+    currency: USD
+    period: per-request
+    best_for: Flexible and background work
+    published_range_usd_per_million:
+      models: 22
+      input: '0.08 - 16.50'
+      output: '0.46 - 68.54'
+    available_at_probe: 22 of 22 selectors
+    source: https://infer.flow7.org/api/public/catalog
+  - name: Balanced
+    selector_suffix: ':balanced'
+    wire_tier: balanced
+    price: usage-based
+    currency: USD
+    period: per-request
+    best_for: Most everyday work
+    published_range_usd_per_million:
+      models: 22
+      input: '0.08 - 16.54'
+      output: '0.46 - 68.69'
+    available_at_probe: 22 of 22 selectors
+    source: https://infer.flow7.org/api/public/catalog
+  - name: Stable
+    selector_suffix: ':stable'
+    wire_tier: priority
+    price: usage-based
+    currency: USD
+    period: per-request
+    best_for: Continuity through a redundancy-oriented route pool
+    published_range_usd_per_million:
+      models: 22
+      input: '0.09 - 18.04'
+      output: '0.50 - 74.92'
+    available_at_probe: 22 of 22 selectors
+    source: https://infer.flow7.org/api/public/catalog
+  - name: Official API
+    selector_suffix: ':official'
+    wire_tier: official
+    price: 1.25x supplier cost
+    currency: USD
+    period: per-request
+    best_for: The model lab's first-party API endpoint
+    published_range_usd_per_million:
+      models: 17
+      input: '0.12 - 12.50'
+      output: '0.75 - 62.50'
+    available_at_probe: 0 of 17 selectors
+    availability_note: >-
+      Published but not currently callable — every :official selector returned available=false at
+      probe time. Infer states the option "is available only when an exact first-party route has
+      passed verification." A published price here is explicitly not a callable route.
+    source: https://infer.flow7.org/api/public/catalog
+funding:
+  first_funding_minimum_usd: 20
+  reload_minimum_usd: 50
+  processor: Stripe-hosted Checkout; Sold through Link, LLC is merchant of record for Stripe Managed Payments
+  infer_checkout_fee: none
+  tax: may be added separately by the merchant of record
+  credit_availability: after payment is confirmed
+  source: https://infer.flow7.org/docs and https://infer.flow7.org/terms
+sandbox_credit:
+  amount_usd: 0.05
+  type: one-time simulated
+  cash_value: none
+  usable_for_live: false
+  source: https://infer.flow7.org/docs
+  detail: sandbox/infer-by-flow7-sandbox.yml
+charging_mechanics:
+  reservation: Maximum estimated cost is held before the request starts.
+  settlement: Actual amount charged on completion; the unused remainder is returned to the wallet immediately.
+  receipt: Every request produces a receipt_id and a customer_cost_usd in the response relay block.
+  cache_pricing: >-
+    Three separate published rates per selector — input_per_million_usd,
+    cached_input_per_million_usd and cache_write_per_million_usd — plus a request_usd component.
+  price_versioning: >-
+    Each tier carries a price_version string. Infer's Terms state the recorded price version controls
+    an accepted request, so a mid-flight price change cannot reprice work already admitted.
+disclosed_margin_fields:
+  present: true
+  fields: [minimum_margin, target_contribution_margin, retry_budget]
+  note: >-
+    Worth flagging as a market observation, not a criticism — Infer publishes its own margin floor and
+    target contribution margin per selector in the same unauthenticated document as the customer
+    price. Almost no commercial API in the catalog exposes this.
+market_reference_pricing:
+  present: true
+  note: >-
+    Each tier embeds a market block naming the reference lab, that lab's list price, a dated as_of, a
+    source_url, and the computed discount percentages against it. Infer therefore publishes its own
+    competitive comparison in machine-readable form.
+enterprise_contact_only: false
+refund_policy:
+  url: https://infer.flow7.org/refunds
+  version: '2026-08-08'
+  summary: >-
+    14-day refund of unused, settled paid credit from the funding transaction. Consumed inference is
+    generally final. Refunds return only to the original payment method.
+related:
+  - rate-limits/infer-by-flow7-rate-limits.yml
+  - sandbox/infer-by-flow7-sandbox.yml
+  - lifecycle/infer-by-flow7-lifecycle.yml

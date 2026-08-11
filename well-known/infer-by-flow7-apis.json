@@ -1,0 +1,91 @@
+{
+  "aid": "infer.flow7.org:api-index",
+  "name": "Infer by Flow7",
+  "description": "Product-owned discovery metadata for the Infer public paid-beta API.",
+  "url": "https://infer.flow7.org/.well-known/apis.json",
+  "created": "2026-08-11",
+  "modified": "2026-08-11",
+  "type": "Index",
+  "specificationVersion": "0.21",
+  "tags": [
+    "API",
+    "Inference"
+  ],
+  "apis": [
+    {
+      "aid": "infer.flow7.org:infer-api",
+      "name": "Infer by Flow7 Responses API",
+      "description": "Public model catalog and status resources plus authenticated Responses requests.",
+      "image": "https://infer.flow7.org/assets/og-infer.png?v=20260811",
+      "humanURL": "https://infer.flow7.org/docs",
+      "baseURL": "https://infer.flow7.org",
+      "version": "0.4.0",
+      "properties": [
+        {
+          "type": "OpenAPI",
+          "mediaType": "application/json",
+          "url": "https://infer.flow7.org/openapi-public.json"
+        },
+        {
+          "type": "Documentation",
+          "mediaType": "text/html",
+          "url": "https://infer.flow7.org/docs"
+        },
+        {
+          "type": "StatusPage",
+          "mediaType": "application/json",
+          "url": "https://infer.flow7.org/api/public/status"
+        },
+        {
+          "type": "Services",
+          "mediaType": "text/html",
+          "url": "https://infer.flow7.org/models"
+        },
+        {
+          "type": "AgentSkills",
+          "mediaType": "application/json",
+          "url": "https://infer.flow7.org/.well-known/agent-skills/index.json"
+        }
+      ]
+    }
+  ],
+  "common": [
+    {
+      "type": "Signup",
+      "mediaType": "text/html",
+      "url": "https://infer.flow7.org/signup"
+    },
+    {
+      "type": "Support",
+      "mediaType": "text/html",
+      "url": "https://infer.flow7.org/support"
+    },
+    {
+      "type": "TermsOfService",
+      "mediaType": "text/html",
+      "url": "https://infer.flow7.org/terms"
+    },
+    {
+      "type": "PrivacyPolicy",
+      "mediaType": "text/html",
+      "url": "https://infer.flow7.org/privacy"
+    },
+    {
+      "type": "LlmsText",
+      "mediaType": "text/plain",
+      "url": "https://infer.flow7.org/llms.txt"
+    },
+    {
+      "type": "BlogFeed",
+      "mediaType": "application/rss+xml",
+      "url": "https://infer.flow7.org/feed.xml"
+    }
+  ],
+  "maintainers": [
+    {
+      "FN": "Infer by Flow7",
+      "org": "Flow7",
+      "url": "https://infer.flow7.org"
+    }
+  ]
+}

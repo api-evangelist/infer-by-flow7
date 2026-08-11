@@ -1,0 +1,137 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  Derived from the 4xx/5xx responses in openapi/infer-by-flow7-public-api-openapi.yml, then enriched
+  with the published error-code reference on https://infer.flow7.org/docs and the codes observed in
+  Infer's own Route Note 005.
+description: >-
+  Infer's error surface. The envelope is a bespoke flat object, NOT RFC 9457 — no
+  application/problem+json media type, no type URI, no title/detail/instance members. What Infer does
+  give is a stable machine `code`, a `request_id` on every failure, and an unusually explicit
+  contract about which failures are retryable and with what idempotency key.
+format: bespoke
+rfc9457: false
+media_type: application/json
+envelope:
+  error:
+    code: string (required)
+    message: string (required)
+    request_id: string | null (required)
+  additional_properties: allowed
+headers_on_error:
+  X-Request-ID: present on every documented error response
+  Retry-After: present on 429 only, integer seconds, for coarse request-rate limits
+status_codes:
+  - status: 400
+    ref: BadRequest
+    description: The request could not be processed.
+    operations: [createResponse]
+  - status: 401
+    ref: Unauthorized
+    description: A valid Bearer API key is required.
+    operations: [listModels, createResponse]
+  - status: 402
+    ref: PaymentRequired
+    description: The wallet cannot cover the request's reservation.
+    operations: [createResponse]
+    note: >-
+      Raised against the pre-flight RESERVATION (maximum estimated cost), not the final charge. A
+      request can be rejected 402 and still have been affordable at settlement price.
+  - status: 403
+    ref: Forbidden
+    description: The key, organization, environment, or scope cannot perform this operation.
+    operations: [listModels, createResponse]
+  - status: 404
+    ref: NotFound
+    description: No active price exists for the requested selector in this environment.
+    operations: [createResponse]
+    note: A 404 here is a PRICING miss, not a routing miss — the selector has no active price version.
+  - status: 409
+    ref: Conflict
+    description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
+    operations: [createResponse]
+  - status: 413
+    ref: PayloadTooLarge
+    description: The input or request body exceeds a configured limit.
+    operations: [createResponse]
+    note: The configured limit is not published as a number.
+  - status: 422
+    ref: UnprocessableEntity
+    description: A selector, input, output limit, session identifier, or routing option is invalid.
+    operations: [createResponse]
+  - status: 429
+    ref: RateLimited
+    description: The request rate limit or an API-key spend ceiling was reached.
+    operations: [getPublicCatalog, getPublicStatus, listModels, createResponse]
+    note: Overloaded status — read error.code to distinguish throttling from budget exhaustion.
+  - status: 500
+    ref: InternalError
+    description: Infer could not complete the operation.
+    operations: [getPublicCatalog, getPublicStatus, listModels, createResponse]
+  - status: 503
+    ref: Unavailable
+    description: >-
+      Live inference is disabled, no eligible route has capacity, or no route completed within the
+      retry budget.
+    operations: [createResponse]
+codes:
+  - code: invalid_api_key
+    status: 401
+    meaning: Missing, revoked, or invalid key.
+    remediation: Create a new key in the workspace and set it in the environment. Never place it in a URL or prompt.
+    retryable: false
+    source: https://infer.flow7.org/docs
+  - code: insufficient_credits
+    status: 402
+    meaning: The wallet cannot cover the estimated request cost.
+    remediation: Fund the prepaid wallet (first funding $20, later reloads $50) or lower max_output_tokens.
+    retryable: false
+    source: https://infer.flow7.org/docs
+  - code: capacity_unavailable
+    status: 503
+    meaning: No working route supports the selected option.
+    remediation: Read GET /api/public/status, then retry with a different selector or price option.
+    retryable: true
+    source: https://infer.flow7.org/docs
+  - code: request_in_progress
+    status: 409
+    meaning: The idempotency key is already active.
+    remediation: Wait for the in-flight operation to reach a terminal state rather than re-sending.
+    retryable: false
+    source: https://infer.flow7.org/docs
+  - code: request_failed_use_new_idempotency_key
+    status: 409
+    meaning: The prior operation failed and its key is now a terminal failure record.
+    remediation: >-
+      Retry the operation with a NEW Idempotency-Key. This is the inverse of the usual retry-with-the-
+      same-key convention and is the single most likely integration mistake against this API.
+    retryable: true
+    retry_requires_new_idempotency_key: true
+    source: https://infer.flow7.org/docs
+  - code: upstream_unavailable
+    status: 503
+    meaning: Available routes failed before the request completed.
+    remediation: Retry with a new idempotency key after checking status; consider the :stable price option.
+    retryable: true
+    source: https://infer.flow7.org/docs
+  - code: daily_budget_exceeded
+    status: 429
+    meaning: The API key's daily spend ceiling would be exceeded by this request's reservation.
+    remediation: >-
+      Raise the key's ceiling or wait for the window. Retry-After is NOT promised for this case — it
+      is documented only for coarse request-rate limits.
+    retryable: false
+    source: >-
+      https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling — observed, not from the docs
+      error table: seven concurrent contenders against a $0.01/day key each returned HTTP 429 with
+      this code.
+gaps:
+  - >-
+    The docs error table lists six codes; the OpenAPI declares eleven distinct status codes. Codes for
+    400, 413, 422 and 500 are not published by name, so a client cannot switch on them.
+  - >-
+    No published enumeration of the full code space, and no error-code page separate from the docs
+    page.
+related:
+  - conventions/infer-by-flow7-conventions.yml
+  - rate-limits/infer-by-flow7-rate-limits.yml

@@ -1,0 +1,183 @@
+generated: '2026-08-11'
+method: derived
+source: openapi/infer-by-flow7-public-api-openapi.yml (components.schemas, 22 schemas)
+description: >-
+  The entity graph behind Infer's four operations. It is small and deliberately shallow — there are no
+  persistent, addressable resources in the public contract at all. No entity has a GET-by-id
+  operation; a Response and its Receipt are returned once and never re-fetchable through the public
+  API. Everything else is a read-only projection of pricing and health.
+entity_count: 8
+persistent_addressable_entities: 0
+id_prefixes:
+  - prefix: resp_
+    entity: Response
+    source: example in https://infer.flow7.org/docs
+  - prefix: rcpt_
+    entity: Receipt (relay.receipt_id)
+    source: >-
+      https://infer.flow7.org/docs example and the real value rcpt_d32aefa9cbc630fa67934a4b published
+      in Route Note 005
+  - prefix: pv_
+    entity: PriceVersion
+    source: >-
+      Documented example in /docs. NOTE — the live catalog returns the far longer form
+      live-beta-mode-<hex>-<tier>, so pv_ appears to be an illustrative shorthand rather than the
+      production format.
+  - prefix: req_
+    entity: RequestId (X-Request-ID)
+    source: observed live on GET /api/public/status — req_6c40bad6e6d044e6b58ce18f
+entities:
+  - name: PublicCatalog
+    schema: PublicCatalog
+    operation: getPublicCatalog
+    kind: document
+    key: none (singleton document)
+    fields: [currency, unit, environment, simulated, live_available, models, disclosure]
+  - name: CatalogModel
+    schema: CatalogModel
+    kind: value
+    key: slug
+    fields: [slug, name, kind, environment, tiers, runtime]
+    note: kind is "exact" or "dynamic"; 22 models present at probe time.
+  - name: CatalogTier
+    schema: CatalogTier
+    kind: value
+    key: selector
+    fields:
+      - selector
+      - available
+      - privacy_modes
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - cache_write_per_million_usd
+      - output_per_million_usd
+      - request_usd
+      - minimum_margin
+      - target_contribution_margin
+      - retry_budget
+      - price_version
+  - name: CatalogRuntime
+    schema: CatalogRuntime
+    kind: value
+    note: >-
+      Per-model capability block observed live — status, p95_latency_ms, max_context_tokens,
+      max_output_tokens, tools, structured_outputs, vision, streaming, responses_api. At probe time
+      22/22 models advertised tools, streaming and responses_api; 21/22 advertised structured_outputs.
+  - name: PublicStatus
+    schema: PublicStatus
+    operation: getPublicStatus
+    kind: document
+    key: none (singleton document)
+    fields: [environment, simulated, updated_at, status, services, note]
+  - name: PublicServiceStatus
+    schema: PublicServiceStatus
+    kind: value
+    key: service
+    note: One row per published model service, with status and p95_latency_ms.
+  - name: Model
+    schema: Model
+    operation: listModels
+    kind: resource projection
+    key: id (the selector)
+    fields: [id, object, owned_by, relay]
+    note: owned_by is a const "infer" — the upstream owner is never named.
+  - name: Response
+    schema: ResponseObject
+    operation: createResponse
+    kind: transient resource
+    key: id (resp_...)
+    retrievable: false
+    fields: [id, object, created_at, status, model, output, output_text, usage, relay]
+relationships:
+  - from: PublicCatalog
+    to: CatalogModel
+    type: has_many
+    via: models[]
+  - from: CatalogModel
+    to: CatalogTier
+    type: has_many
+    via: tiers{} (keyed by wire tier — economy, balanced, priority, official)
+  - from: CatalogModel
+    to: CatalogRuntime
+    type: has_one
+    via: runtime
+  - from: PublicStatus
+    to: PublicServiceStatus
+    type: has_many
+    via: services[]
+  - from: PublicServiceStatus
+    to: CatalogModel
+    type: belongs_to
+    via: service == CatalogModel.slug
+    confidence: high
+    evidence: >-
+      All 22 service names in the live status response match the 22 model slugs in the live catalog
+      exactly. This join is not declared in the spec but is the join a client must make to answer
+      "is the selector I want callable right now".
+  - from: Model
+    to: ModelPrice
+    type: has_one
+    via: relay
+  - from: Model
+    to: CatalogTier
+    type: belongs_to
+    via: Model.id == CatalogTier.selector
+    confidence: high
+  - from: CreateResponseRequest
+    to: CatalogTier
+    type: belongs_to
+    via: model (selector) == CatalogTier.selector
+    confidence: high
+  - from: CreateResponseRequest
+    to: RelayRequestOptions
+    type: has_one
+    via: relay
+  - from: Response
+    to: ResponseUsage
+    type: has_one
+    via: usage
+  - from: Response
+    to: RelayResponseMetadata
+    type: has_one
+    via: relay
+  - from: RelayResponseMetadata
+    to: Receipt
+    type: belongs_to
+    via: receipt_id
+    confidence: medium
+    note: >-
+      The Receipt is referenced by id but has no schema and no operation in the public contract. It is
+      addressable only inside the console and through the local receipt inspector at
+      /tools/receipt-inspector.
+  - from: RelayResponseMetadata
+    to: CatalogTier
+    type: belongs_to
+    via: price_version
+    confidence: high
+    note: The locked price that governs the charge; the same string appears on the catalog tier.
+  - from: Response
+    to: Session
+    type: belongs_to
+    via: relay.session_id / X-Session-Affinity
+    confidence: medium
+    note: >-
+      A Session is not a schema — it is a client-supplied opaque string that pins route affinity. It
+      has no lifecycle, no expiry and no retrieval operation in the public contract.
+  - from: ErrorEnvelope
+    to: ErrorDetail
+    type: has_one
+    via: error
+observations:
+  - >-
+    The public data model has no customer, workspace, key, wallet, transaction or receipt entity —
+    all of which demonstrably exist in the product (they appear in the docs, the Terms and Route Note
+    005's ledger reconciliation). Everything commercial lives behind the console, not the API.
+  - >-
+    The requested `model` and the served class are deliberately different fields. Response.model
+    echoes the requested selector; relay.resolved_model_class names what ran. For a dynamic selector
+    like infer/auto/code:stable these differ by design.
+  - >-
+    relay.tier uses the wire vocabulary (economy | balanced | priority | official) while the selector
+    uses the customer vocabulary (:low-cost | :balanced | :stable | :official). Two of the four do
+    not match by string.
+render: none

@@ -1,0 +1,93 @@
+generated: '2026-08-11'
+method: searched
+source: https://infer.flow7.org/docs — the "Provider-free sandbox smoke test" and "Simulation boundary" sections.
+description: >-
+  Infer ships a real, self-serve sandbox that requires no funding and no supplier. Its distinguishing
+  feature is honesty about what it does NOT prove: a sandbox request runs Infer's own local demo
+  fixture, not the named model and not a supplier, and Infer says so in the product rather than in
+  fine print. The sandbox exists to validate auth, request shape, response parsing and receipt wiring
+  before a buyer funds a live wallet.
+sandbox_available: true
+signup_required: true
+funding_required: false
+base_url: https://infer.flow7.org/v1
+environments:
+  - name: sandbox
+    key_env_var: INFER_SANDBOX_API_KEY
+    key_label_in_console: Internal test environment
+    credit:
+      amount_usd: 0.05
+      type: one-time simulated
+      claim_path: Wallet -> "Claim sandbox test credit"
+      cash_value: none
+      can_fund_live_requests: false
+    what_runs: Infer's local demo fixture
+    response_markers:
+      relay.environment: sandbox
+      relay.resolved_model_class: Infer local sandbox fixture
+    assertion_guidance: >-
+      Infer explicitly instructs clients NOT to assert on the returned model name or response text in
+      sandbox — only on relay.environment and relay.resolved_model_class.
+  - name: live
+    key_env_var: INFER_API_KEY
+    funding_required: true
+    first_funding_minimum_usd: 20
+    preflight: The selected model must show operational on GET /api/public/status before a paid request.
+setup_steps:
+  - Create an account at https://infer.flow7.org/signup and confirm the one-time verification link.
+  - Open Wallet and select "Claim sandbox test credit".
+  - Create a sandbox key with "Internal test environment" selected; copy it once.
+  - Set it as INFER_SANDBOX_API_KEY in a shell or secret manager — never in a URL, repository, or chat.
+  - Send the published smoke-test request below.
+smoke_test:
+  method: POST
+  url: https://infer.flow7.org/v1/responses
+  headers:
+    Authorization: "Bearer $INFER_SANDBOX_API_KEY"
+    Content-Type: application/json
+    Idempotency-Key: sandbox-smoke-test
+  body:
+    model: infer/auto/code:low-cost
+    input: Confirm the sandbox request path.
+    max_output_tokens: 32
+  verbatim_from: https://infer.flow7.org/docs
+  retry_rule: >-
+    Use a NEW Idempotency-Key value for every new attempt, especially after a terminal failure — the
+    published value sandbox-smoke-test is single-use.
+test_credentials:
+  published_test_keys: none
+  note: >-
+    Infer publishes NO shared test key, test token, or hosted playground credential. Sandbox keys are
+    per-workspace and created by the customer. There are no vendor test values to record here, which
+    is the correct posture for an inference API.
+simulation_boundary:
+  verbatim_claim: >-
+    "Sandbox requests run only Infer's local demo fixture. They do not run the named model or a
+    supplier and are not evidence of model quality, supplier identity, latency, availability, or
+    production behavior."
+  source: https://infer.flow7.org/docs
+time_simulation:
+  supported: false
+fixture_or_trigger_tooling:
+  - name: Codex provider doctor
+    url: https://infer.flow7.org/tools/codex-provider-doctor
+    kind: local diagnostic
+    version: 0.1.0
+    credential_free_pass: true
+    note: >-
+      Runs on the caller's machine. The safe default pass sends no key and never reaches /responses;
+      four optional paid probes (JSON, SSE, tools, structured output) require a typed RUN PAID CHECKS
+      confirmation in the terminal and are capped at 96 output tokens per request. Distributed as a
+      packaged Agent Skill — see packages/ and skills/.
+  - name: Receipt inspector
+    url: https://infer.flow7.org/tools/receipt-inspector
+    kind: local inspector
+    note: Inspects an Infer charge record locally.
+  - name: Route sheet
+    url: https://infer.flow7.org/tools/route-sheet
+    kind: price estimator
+    note: Estimates current selector pricing for one request and a monthly request count.
+related:
+  - authentication/infer-by-flow7-authentication.yml
+  - plans/infer-by-flow7-plans-pricing.yml
+  - conventions/infer-by-flow7-conventions.yml

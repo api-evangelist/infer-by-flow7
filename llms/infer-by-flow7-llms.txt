@@ -1,0 +1,44 @@
+# Infer by Flow7
+
+> Infer by Flow7 is a public paid beta for accountable coding-agent inference. Anyone can create a workspace; verify email and fund a live wallet before paid inference.
+
+A published catalog entry is not proof that a route is callable. Read live status before recommending a selector or sending a request. Public route availability is dynamic. Strict supplier-evidence readiness is a separate standard, and Infer does not attest an upstream provider identity. Never ask a user to paste an API key into chat or a URL.
+
+## Current state
+
+- [Public route status](https://infer.flow7.org/api/public/status): Current customer-facing route availability. Stop before a paid request unless the selected service is operational.
+- [Published catalog](https://infer.flow7.org/api/public/catalog): Current selectors and pricing metadata; this is not an availability signal.
+- [Create an account](https://infer.flow7.org/signup): Create a public paid-beta workspace, verify the account email, fund the live wallet, and create a scoped API key.
+- [Sandbox smoke test](https://infer.flow7.org/docs#sandbox-quickstart): After verification, claim simulated credit for a local-fixture API and receipt check before funding. It proves no model or supplier behavior.
+
+## Coding-agent setup
+
+- [Compatibility record](https://infer.flow7.org/compatibility): Exact-version checks. Local passes are not live-supplier certification.
+- [Codex](https://infer.flow7.org/integrations/codex): Setup.
+- [OpenCode](https://infer.flow7.org/integrations/opencode): Setup.
+- [Pydantic AI](https://infer.flow7.org/integrations/pydantic-ai): Setup.
+- [LangChain](https://infer.flow7.org/integrations/langchain): Setup.
+- [Vercel AI SDK](https://infer.flow7.org/integrations/vercel-ai-sdk): Setup.
+- [API documentation](https://infer.flow7.org/docs): Contract, spend controls, and receipts.
+
+## Diagnostics
+
+- [Codex provider doctor](https://infer.flow7.org/tools/codex-provider-doctor): Run credential-free local checks first; paid probes require explicit confirmation.
+- [Route sheet](https://infer.flow7.org/tools/route-sheet): Estimate current selector pricing for one request and a monthly request count.
+- [Receipt inspector](https://infer.flow7.org/tools/receipt-inspector): Inspect an Infer charge record locally.
+
+## Machine-readable resources
+
+- [Public OpenAPI 3.1 description](https://infer.flow7.org/openapi-public.json): Contract for public paid-beta access, unauthenticated catalog/status resources, and authenticated model/Responses endpoints. Publication is not an availability signal.
+- [Agent Skills discovery](https://infer.flow7.org/.well-known/agent-skills/index.json): Versioned skills with SHA-256 artifact digests.
+- [API catalog](https://infer.flow7.org/.well-known/api-catalog): RFC 9727 API discovery document.
+- [Route Notes feed](https://infer.flow7.org/feed.xml): Product operating notes and tested boundaries.
+
+## Optional
+
+- [Route Note 005](https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling): One completed request, seven budget rejections, one receipt, and the test limits.
+- [Route Note 004](https://infer.flow7.org/notes/codex-opencode-live-responses-record): Bounded Codex 0.146.0 and OpenCode 1.18.16 production records.
+- [Route Note 002](https://infer.flow7.org/notes/test-a-codex-provider-without-sharing-your-key): What the provider doctor proves and does not prove.
+- [Support](https://infer.flow7.org/support)
+- [Privacy](https://infer.flow7.org/privacy)
+- [Terms](https://infer.flow7.org/terms)

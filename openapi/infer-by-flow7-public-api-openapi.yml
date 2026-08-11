@@ -1,0 +1,904 @@
+# Harvested verbatim from https://infer.flow7.org/openapi-public.json (HTTP 200, application/json, 2026-08-11)
+# and converted JSON -> YAML without alteration. Byte-exact original: openapi/_original/infer-by-flow7-openapi-public.json
+# x-apievangelist-provenance: {generated: '2026-08-11', method: searched, source: 'https://infer.flow7.org/openapi-public.json'}
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: Infer by Flow7 Public API
+  summary: Authenticated Responses inference plus public catalog and route-status metadata.
+  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint
+    and model list, plus the unauthenticated catalog and status resources. Public registration creates a workspace; the account
+    email must be verified, the live wallet must be funded, and a scoped live API key must be created before paid live inference.
+    Route availability is dynamic, so read the public status resource before sending traffic. Strict supplier-evidence readiness
+    is a separate standard, and Infer does not attest an upstream provider identity.'
+  termsOfService: https://infer.flow7.org/terms
+  contact:
+    name: Infer by Flow7 support
+    url: https://infer.flow7.org/support
+  version: 0.4.0
+  x-infer-access:
+    mode: public-paid-beta
+    url: https://infer.flow7.org/signup
+    automaticWorkspaceCreation: true
+    emailVerificationRequired: true
+    fundingRequiredForLiveInference: true
+servers:
+- url: https://infer.flow7.org
+  description: Infer's production origin. Read /api/public/status for current route availability.
+externalDocs:
+  description: Human-readable Infer API documentation
+  url: https://infer.flow7.org/docs
+tags:
+- name: Inference
+  description: Authenticated customer inference operations.
+- name: Catalog
+  description: Model selectors, published prices, and route capability metadata.
+- name: Status
+  description: Customer-facing service state without private routing topology.
+paths:
+  /api/public/catalog:
+    get:
+      tags:
+      - Catalog
+      summary: Read the published model and price catalog
+      description: Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields.
+        A catalog row or published price is not proof that its selector is callable. The response's environment and runtime
+        fields are authoritative. Requesting the live environment falls back to sandbox while live inference is disabled.
+        Private routing topology is excluded.
+      operationId: getPublicCatalog
+      security: []
+      parameters:
+      - name: environment
+        in: query
+        required: false
+        description: Requested catalog environment. The response environment may be sandbox when live inference is disabled.
+        schema:
+          type: string
+          enum:
+          - sandbox
+          - live
+      responses:
+        '200':
+          description: Published catalog. Inspect each model's runtime status before use.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCatalog'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/public/status:
+    get:
+      tags:
+      - Status
+      summary: Read customer-facing route status
+      description: Returns an overall state and one state per published service. The simulated field distinguishes sandbox
+        health from live service health. Private route counts, failure domains, and provider identities are not returned.
+      operationId: getPublicStatus
+      security: []
+      responses:
+        '200':
+          description: Current customer-facing status.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicStatus'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1/models:
+    get:
+      tags:
+      - Catalog
+      summary: List selectors for an API key's environment
+      description: Returns selectors for the authenticated API key's environment. For live keys, every returned selector has
+        current public-callable capacity for its exact price option at response time; availability can change, so consult
+        public status immediately before use. Sandbox keys list active test prices. The key must carry the inference:write
+        scope.
+      operationId: listModels
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Currently callable live selectors, or active sandbox selectors, for the key's environment.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1/responses:
+    post:
+      tags:
+      - Inference
+      summary: Create a Responses-style inference request
+      description: Authenticates an Infer API key, validates a canonical model selector and routing policy, reserves the request's
+        spend ceiling, and returns a charge record reference after completion. Exact model-family selection does not cross
+        into another model family. Verified, funded public paid-beta workspaces can send live requests while the selected
+        service is operational. Route eligibility still depends on the current environment, capabilities, privacy policy,
+        region, health, authorization, and capacity; read /api/public/status immediately before use. A response model name
+        or charge record does not attest upstream provider identity or satisfy Infer's separate strict supplier-evidence standard.
+      operationId: createResponse
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        description: Stable retry key, scoped to the organization and API-key environment. The header takes precedence over
+          the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly.
+          A failed operation keeps its key as a terminal failure record; retry that operation with a new key.
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+      - name: X-Session-Affinity
+        in: header
+        required: false
+        description: Optional stable session identifier. relay.session_id in the JSON body takes precedence.
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResponseRequest'
+      responses:
+        '200':
+          description: Completed response as JSON, or Responses events when stream is true. Infer currently assembles the
+            completed upstream result into an SSE event sequence; this description does not promise token-by-token upstream
+            delivery.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseObject'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ResponseEventStream'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Infer API key
+      description: Workspace API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: The request could not be processed.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: A valid Bearer API key is required.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    PaymentRequired:
+      description: The wallet cannot cover the request's reservation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: The key, organization, environment, or scope cannot perform this operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: No active price exists for the requested selector in this environment.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    PayloadTooLarge:
+      description: The input or request body exceeds a configured limit.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    UnprocessableEntity:
+      description: A selector, input, output limit, session identifier, or routing option is invalid.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unavailable:
+      description: Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
+    ErrorDetail:
+      type: object
+      required:
+      - code
+      - message
+      - request_id
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type:
+          - string
+          - 'null'
+      additionalProperties: true
+    PublicStatus:
+      type: object
+      required:
+      - environment
+      - simulated
+      - updated_at
+      - status
+      - services
+      - note
+      properties:
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - operational
+          - partial_outage
+          - unavailable
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicServiceStatus'
+        note:
+          type: string
+      additionalProperties: false
+    PublicServiceStatus:
+      type: object
+      required:
+      - service
+      - status
+      - p95_latency_ms
+      properties:
+        service:
+          type: string
+          description: Published model-family identifier.
+        status:
+          type: string
+          enum:
+          - operational
+          - unavailable
+        p95_latency_ms:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+      additionalProperties: false
+    PublicCatalog:
+      type: object
+      required:
+      - currency
+      - unit
+      - environment
+      - simulated
+      - live_available
+      - models
+      - disclosure
+      properties:
+        currency:
+          type: string
+          const: USD
+        unit:
+          type: string
+          const: per_million_tokens
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        live_available:
+          type: boolean
+          description: Whether live inference is enabled globally. This alone does not establish selector callability.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogModel'
+        disclosure:
+          $ref: '#/components/schemas/CatalogDisclosure'
+      additionalProperties: false
+    CatalogModel:
+      type: object
+      required:
+      - slug
+      - name
+      - kind
+      - environment
+      - tiers
+      - runtime
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        tiers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CatalogTier'
+        runtime:
+          $ref: '#/components/schemas/CatalogRuntime'
+      description: Stable integration fields are described explicitly. Additional public presentation and market-reference
+        fields may be present.
+      additionalProperties: true
+    CatalogTier:
+      type: object
+      required:
+      - selector
+      - available
+      - privacy_modes
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - cache_write_per_million_usd
+      - output_per_million_usd
+      - request_usd
+      - minimum_margin
+      - target_contribution_margin
+      - retry_budget
+      - price_version
+      properties:
+        selector:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        available:
+          type: boolean
+          description: True only when this exact selector currently has public-callable capacity for the default standard
+            privacy mode. Use the authenticated /v1/models list for actionable live selectors.
+        privacy_modes:
+          type: array
+          items:
+            type: string
+            enum:
+            - standard
+            - no-training
+            - zero-retention
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        cache_write_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+        request_usd:
+          type: number
+        minimum_margin:
+          type: number
+        target_contribution_margin:
+          type: number
+        retry_budget:
+          type: number
+        price_version:
+          type: string
+      additionalProperties: true
+    CatalogRuntime:
+      type: object
+      required:
+      - status
+      - p95_latency_ms
+      - max_context_tokens
+      - max_output_tokens
+      - tools
+      - structured_outputs
+      - vision
+      - streaming
+      - responses_api
+      properties:
+        status:
+          type: string
+          enum:
+          - operational
+          - unavailable
+        p95_latency_ms:
+          type:
+          - integer
+          - 'null'
+        max_context_tokens:
+          type:
+          - integer
+          - 'null'
+        max_output_tokens:
+          type:
+          - integer
+          - 'null'
+        tools:
+          type: boolean
+        structured_outputs:
+          type: boolean
+        vision:
+          type: boolean
+        streaming:
+          type: boolean
+        responses_api:
+          type: boolean
+      additionalProperties: false
+    CatalogDisclosure:
+      type: object
+      required:
+      - supplier_identity
+      - environment
+      - statement
+      properties:
+        supplier_identity:
+          type: string
+          const: private
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        statement:
+          type: string
+      additionalProperties: false
+    ModelList:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+      additionalProperties: false
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - owned_by
+      - relay
+      properties:
+        id:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        object:
+          type: string
+          const: model
+        owned_by:
+          type: string
+          const: infer
+        relay:
+          $ref: '#/components/schemas/ModelPrice'
+      additionalProperties: false
+    ModelPrice:
+      type: object
+      required:
+      - name
+      - kind
+      - tier
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - output_per_million_usd
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+      additionalProperties: false
+    CreateResponseRequest:
+      type: object
+      required:
+      - model
+      - input
+      properties:
+        model:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+          description: Canonical selector from the model list or public catalog.
+        input:
+          $ref: '#/components/schemas/ResponseInput'
+        max_output_tokens:
+          type: integer
+          minimum: 1
+          description: Requested output ceiling. The deployment's configured maximum also applies.
+        stream:
+          type: boolean
+          default: false
+        tools:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          description: Responses-style function tools. The selected route must advertise tool support.
+        text:
+          type: object
+          additionalProperties: true
+          description: Responses text options, including a structured-output format. Route support is required.
+        response_format:
+          type: object
+          additionalProperties: true
+          description: Accepted structured-output shorthand. Route support is required.
+        reasoning:
+          type: object
+          additionalProperties: true
+        relay:
+          $ref: '#/components/schemas/RelayRequestOptions'
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Top-level session identifier accepted for compatibility. relay.session_id is preferred.
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Body fallback for Idempotency-Key. The header wins when both are present.
+        request_id:
+          type: string
+          description: Optional client correlation value.
+      description: Infer documents the stable fields it validates or uses for routing. Additional Responses fields may pass
+        through on native Responses routes and should not be assumed portable across every route protocol.
+      additionalProperties: true
+    ResponseInput:
+      oneOf:
+      - type: string
+        minLength: 1
+      - type: array
+        minItems: 1
+        items:
+          oneOf:
+          - type: string
+          - $ref: '#/components/schemas/ResponseInputItem'
+      description: Text or a list of Responses input items. The complete list must contain extractable text in a string or
+        message content for Infer's admission check. Native Responses routes may also carry message, function_call, and function_call_output
+        turn objects; those objects are not assumed portable through translated route protocols.
+      examples:
+      - - type: message
+          role: user
+          content:
+          - type: input_text
+            text: Check the repository state, then use the approved read-only tool.
+        - type: function_call
+          call_id: call_example
+          name: read_repository_state
+          arguments: '{}'
+        - type: function_call_output
+          call_id: call_example
+          output: No uncommitted changes.
+    ResponseInputItem:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Responses item type, including message, function_call, or function_call_output.
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          - system
+          - developer
+        content:
+          oneOf:
+          - type: string
+            minLength: 1
+          - type: array
+            minItems: 1
+            items:
+              oneOf:
+              - type: string
+              - $ref: '#/components/schemas/InputTextPart'
+        call_id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: string
+        output: {}
+      description: Responses input item. Message content supplies extractable text; native tool-loop objects may omit content
+        and use call_id, arguments, or output instead.
+      additionalProperties: true
+    InputTextPart:
+      type: object
+      properties:
+        type:
+          type: string
+        text:
+          type: string
+        input_text:
+          type: string
+      anyOf:
+      - required:
+        - text
+      - required:
+        - input_text
+      additionalProperties: true
+    RelayRequestOptions:
+      type: object
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+        privacy:
+          type: string
+          enum:
+          - standard
+          - no-training
+          - zero-retention
+          default: standard
+        region:
+          type: string
+          minLength: 1
+          maxLength: 32
+      additionalProperties: false
+    ResponseObject:
+      type: object
+      required:
+      - id
+      - object
+      - created_at
+      - status
+      - model
+      - output
+      - output_text
+      - usage
+      - relay
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: response
+        created_at:
+          type: integer
+        status:
+          type: string
+          const: completed
+        model:
+          type: string
+          description: The requested Infer selector. Read relay.resolved_model_class for the class that completed.
+        output:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        output_text:
+          type: string
+        usage:
+          $ref: '#/components/schemas/ResponseUsage'
+        relay:
+          $ref: '#/components/schemas/RelayResponseMetadata'
+      additionalProperties: true
+    ResponseUsage:
+      type: object
+      required:
+      - input_tokens
+      - input_tokens_details
+      - output_tokens
+      - output_tokens_details
+      - total_tokens
+      properties:
+        input_tokens:
+          type: integer
+          minimum: 0
+        input_tokens_details:
+          type: object
+          required:
+          - cached_tokens
+          properties:
+            cached_tokens:
+              type: integer
+              minimum: 0
+          additionalProperties: true
+        output_tokens:
+          type: integer
+          minimum: 0
+        output_tokens_details:
+          type: object
+          required:
+          - reasoning_tokens
+          properties:
+            reasoning_tokens:
+              type: integer
+              minimum: 0
+          additionalProperties: true
+        total_tokens:
+          type: integer
+          minimum: 0
+      additionalProperties: true
+    RelayResponseMetadata:
+      type: object
+      required:
+      - receipt_id
+      - price_version
+      - tier
+      - resolved_model_class
+      - cache_status
+      - environment
+      - provider_disclosed
+      - customer_cost_usd
+      properties:
+        receipt_id:
+          type: string
+        price_version:
+          type: string
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        resolved_model_class:
+          type: string
+        cache_status:
+          type: string
+          enum:
+          - hit
+          - partial
+          - miss
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        provider_disclosed:
+          type: boolean
+          const: false
+        customer_cost_usd:
+          type: number
+          minimum: 0
+        idempotent_replay:
+          type: boolean
+      additionalProperties: true
+    ResponseEventStream:
+      type: string
+      description: 'SSE records using response.created, response output/content/function events, response.completed, and a
+        final data: [DONE] sentinel.'

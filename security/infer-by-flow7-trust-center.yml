@@ -1,0 +1,61 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  Probed https://infer.flow7.org/security (404) and reviewed every legal document linked from
+  https://infer.flow7.org/terms on 2026-08-11.
+description: >-
+  Infer publishes no trust center and holds no named third-party certification. It does publish a
+  complete, versioned legal and data-protection document set, which is the closest thing it has to a
+  trust surface. Recorded so the absence is a checked fact rather than an unchecked one.
+trust_center: null
+trust_center_probes:
+  - url: https://infer.flow7.org/security
+    status: 404
+  - url: https://infer.flow7.org/.well-known/security.txt
+    status: 404
+certifications: []
+certification_count: 0
+soc2: false
+iso27001: false
+pci_dss: false
+hipaa: false
+fedramp: false
+notes:
+  - HIPAA is explicitly out of scope — the Terms prohibit submitting protected health information.
+  - >-
+    PCI DSS is out of scope by architecture: Stripe-hosted Checkout with Sold through Link, LLC as
+    merchant of record, and the Terms state Infer does not intentionally receive or store full card
+    numbers or card security codes.
+  - >-
+    The product was days old at probe time (all six Route Notes and every legal version date fall in
+    August 2026), so the absence of an audit report is expected rather than anomalous.
+published_documents:
+  - name: Data Processing Addendum
+    url: https://infer.flow7.org/dpa
+    version: '2026-08-08'
+    regimes: [GDPR, UK GDPR, Swiss FADP, CCPA/CPRA and other US state privacy laws]
+  - name: Subprocessor Notice
+    url: https://infer.flow7.org/subprocessors
+    version: '2026-08-08'
+    note: Names six subprocessors by legal entity with role, data categories and location.
+  - name: Privacy Notice
+    url: https://infer.flow7.org/privacy
+    note: Section 9 lists security controls in prose.
+  - name: Acceptable Use Policy
+    url: https://infer.flow7.org/acceptable-use
+  - name: Legal Operator Notice
+    url: https://infer.flow7.org/legal-operator
+  - name: Terms of Service
+    url: https://infer.flow7.org/terms
+  - name: Refund Policy
+    url: https://infer.flow7.org/refunds
+    version: '2026-08-08'
+data_handling_commitments:
+  privacy_modes: [standard, no-training, zero-retention]
+  privacy_mode_source: RelayRequestOptions.privacy in openapi/infer-by-flow7-public-api-openapi.yml
+  note: >-
+    A per-request privacy mode is part of the wire contract, not just a policy page. Route eligibility
+    depends on it, and per-tier privacy_modes are published in the unauthenticated catalog. At probe
+    time (2026-08-11) all 66 callable tiers listed exactly ["standard"] and the 17 unavailable
+    :official tiers listed none — so no-training and zero-retention are contract-supported but not
+    currently offered on any published selector.

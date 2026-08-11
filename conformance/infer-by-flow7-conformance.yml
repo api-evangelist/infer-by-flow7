@@ -1,0 +1,248 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  https://infer.flow7.org/openapi-public.json, https://infer.flow7.org/.well-known/api-catalog,
+  https://infer.flow7.org/.well-known/agent-skills/index.json, https://infer.flow7.org/dpa,
+  https://infer.flow7.org/subprocessors, https://infer.flow7.org/privacy and
+  https://infer.flow7.org/terms — each assertion below names the artifact or page it was read from.
+description: >-
+  Which cross-cutting standards and regimes Infer actually conforms to. The headline: for a product
+  days old, the SPECIFICATION conformance is unusually strong — OpenAPI 3.1 with a declared 2020-12
+  JSON Schema dialect, a genuine RFC 9727 api-catalog, a self-published APIs.json 0.21 index, an
+  Agent Skills 0.2.0 discovery index with SHA-256 digests, and llms.txt. The gaps are equally
+  specific: no RFC 9457 problem details, no RFC 9116 security.txt, no OAuth/OIDC, no A2A card, no
+  MCP server, and no third-party security certification of any kind.
+standards:
+  - id: openapi
+    name: OpenAPI Specification
+    version: 3.1.0
+    conforms: true
+    evidence: >-
+      https://infer.flow7.org/openapi-public.json declares openapi 3.1.0 and parses. Four operations,
+      all with operationIds, all tagged, three declared tags with descriptions, info.summary,
+      info.termsOfService and info.contact all present.
+  - id: json-schema
+    name: JSON Schema
+    version: draft 2020-12
+    conforms: true
+    evidence: >-
+      jsonSchemaDialect is explicitly set to https://json-schema.org/draft/2020-12/schema — declared
+      rather than assumed, which most 3.1 documents in the catalog omit.
+  - id: rfc9727
+    name: 'RFC 9727 — API Catalog (linkset)'
+    conforms: true
+    evidence: >-
+      GET /.well-known/api-catalog returns HTTP 200 with content-type
+      application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727". The linkset anchors
+      /v1/responses to service-desc (the OpenAPI), service-doc (/docs) and a status resource. Saved
+      at well-known/infer-by-flow7-api-catalog.json.
+  - id: apis-json
+    name: APIs.json
+    version: '0.21'
+    conforms: true
+    self_published: true
+    evidence: >-
+      GET /.well-known/apis.json returns a provider-authored index (aid infer.flow7.org:api-index)
+      with specificationVersion 0.21. Saved at well-known/infer-by-flow7-apis.json.
+  - id: agent-skills
+    name: Agent Skills discovery
+    version: 0.2.0
+    conforms: true
+    evidence: >-
+      GET /.well-known/agent-skills/index.json validates against
+      https://schemas.agentskills.io/discovery/0.2.0/schema.json and lists three skills, each with a
+      SHA-256 artifact digest. Two are skill-md, one is a signed archive.
+  - id: llms-txt
+    name: llms.txt
+    conforms: true
+    evidence: >-
+      GET /llms.txt returns HTTP 200 text/plain in llms.txt form — H1, blockquote summary, and
+      sectioned link lists with descriptions. Saved verbatim at llms/infer-by-flow7-llms.txt.
+  - id: openai-responses
+    name: OpenAI Responses wire API (de facto)
+    conforms: partial
+    evidence: >-
+      POST /v1/responses accepts the Responses request shape and returns a Responses-shaped object
+      with an additive relay block. Infer's own dated compatibility record shows five pinned clients
+      (Codex CLI 0.146.0, OpenCode 1.18.16, Pydantic AI 2.27.1, langchain-openai 1.4.3, Vercel AI SDK
+      7.0.59 / @ai-sdk/openai 4.0.37) posting to /v1/responses with no Chat Completions fallback.
+    deviations:
+      - Model selectors use an Infer grammar (infer/<model>:<price-option>), not upstream model ids.
+      - >-
+        previous_response_id and server-side Conversations are marked "not tested" for every client in
+        the compatibility record — conversation state is not an established behavior.
+      - >-
+        SSE is assembled from a completed upstream result; Infer explicitly does not promise
+        token-by-token upstream delivery.
+  - id: sse
+    name: Server-Sent Events (text/event-stream)
+    conforms: true
+    evidence: >-
+      The 200 response of createResponse declares a text/event-stream content type alongside JSON, and
+      the compatibility record shows four independent clients consuming it to completion.
+  - id: idempotency
+    name: Idempotency keys (Stripe-style header convention)
+    conforms: true
+    evidence: >-
+      Idempotency-Key is a first-class documented header parameter on POST /v1/responses with a body
+      fallback, a defined precedence rule, a 409 conflict path, and a relay.idempotent_replay signal.
+      See conventions/infer-by-flow7-conventions.yml.
+    deviation: >-
+      A failed operation's key becomes a terminal failure record; the retry must use a NEW key
+      (request_failed_use_new_idempotency_key). This inverts the Stripe convention.
+  - id: rfc9457
+    name: 'RFC 9457 — Problem Details for HTTP APIs'
+    conforms: false
+    evidence: >-
+      No application/problem+json anywhere in the contract. Errors use a bespoke flat
+      {error:{code,message,request_id}} envelope. See errors/infer-by-flow7-problem-types.yml.
+  - id: rfc9116
+    name: 'RFC 9116 — security.txt'
+    conforms: false
+    evidence: >-
+      GET /.well-known/security.txt returns 404. A security contact (security@flow7.org) is published
+      only in prose in section 26 of the Terms.
+  - id: rfc8594
+    name: 'RFC 8594 — Sunset HTTP header'
+    conforms: false
+    evidence: No Sunset or Deprecation header is documented or observed; no deprecation policy is published.
+  - id: rfc6749
+    name: 'OAuth 2.0'
+    conforms: false
+    evidence: >-
+      The only securityScheme is HTTP Bearer with an Infer API key.
+      /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource both 404.
+      A permission scope (inference:write) exists on the key but there is no authorization server.
+  - id: oidc
+    name: OpenID Connect
+    conforms: false
+    evidence: >-
+      /.well-known/openid-configuration returns 404. Google OAuth is offered for CONSOLE login only
+      (named in the Subprocessor Notice), not for API authorization.
+  - id: mcp
+    name: Model Context Protocol
+    conforms: false
+    evidence: >-
+      No MCP server. POST tools/list to https://infer.flow7.org/mcp returns 404 and
+      /.well-known/mcp.json returns 404. Infer ships packaged Agent Skills instead — a deliberate and
+      stated choice of agent surface. See mcp/infer-by-flow7-mcp.yml.
+  - id: a2a
+    name: 'A2A (Agent2Agent) Agent Card'
+    conforms: false
+    evidence: >-
+      /.well-known/agent-card.json and the legacy /.well-known/agent.json both return 404 with the
+      site's HTML 404 body. Nothing was written to a2a/.
+  - id: asyncapi
+    name: AsyncAPI
+    conforms: false
+    applicable: false
+    evidence: >-
+      No event, webhook or message-broker surface exists. The only asynchronous behavior is SSE on a
+      synchronous request, which AsyncAPI does not describe. /asyncapi.yaml returns 404. Not a gap —
+      not applicable.
+  - id: graphql
+    name: GraphQL
+    conforms: false
+    applicable: false
+    evidence: No /graphql surface; the API is REST/JSON only.
+  - id: pagination
+    name: Pagination conventions
+    conforms: false
+    applicable: false
+    evidence: No paged collection exists in the four-operation public surface.
+regimes:
+  - id: gdpr
+    name: GDPR / UK GDPR
+    claims_applicability: true
+    certified: false
+    evidence: >-
+      https://infer.flow7.org/dpa names the GDPR and UK GDPR in Applicable Data Protection Law,
+      defines controller/processor roles, security incidents, and subprocessor engagement. Version
+      2026-08-08.
+  - id: swiss-fadp
+    name: Swiss Federal Act on Data Protection
+    claims_applicability: true
+    certified: false
+    evidence: Named in the DPA definition of Applicable Data Protection Law.
+  - id: ccpa
+    name: CCPA/CPRA and other US state privacy laws
+    claims_applicability: true
+    certified: false
+    evidence: >-
+      The DPA commits Infer to Service Provider / Processor status, and to not selling or sharing
+      Customer Personal Data, not combining it across customers to build cross-customer profiles from
+      prompt content, and not using it for cross-context behavioral advertising.
+  - id: pci-dss
+    name: PCI DSS
+    claims_applicability: false
+    certified: false
+    evidence: >-
+      Out of scope by design. Payments run through Stripe-hosted Checkout with Sold through Link, LLC
+      as merchant of record; the Terms state Infer does not intentionally receive or store full card
+      numbers or card security codes.
+  - id: hipaa
+    name: HIPAA
+    claims_applicability: false
+    certified: false
+    evidence: >-
+      Explicitly EXCLUDED — the Terms prohibit submitting protected health information subject to
+      HIPAA. No BAA is offered.
+certifications:
+  count: 0
+  soc2: false
+  iso27001: false
+  fedramp: false
+  note: >-
+    No third-party security certification, audit report or trust center of any kind is published, and
+    probe-security-programs.py found none. Infer instead publishes controls in prose in Privacy Notice
+    section 9 (encrypted transport, password hashing, hashed API keys, secure cookies, monitoring,
+    backups, retention controls). For a days-old product this is an expected state, not a defect — but
+    it is the single largest compliance gap for an enterprise buyer.
+compliance_documents:
+  - name: Data Processing Addendum
+    url: https://infer.flow7.org/dpa
+    version: '2026-08-08'
+  - name: Subprocessor Notice
+    url: https://infer.flow7.org/subprocessors
+    version: '2026-08-08'
+  - name: Privacy Notice
+    url: https://infer.flow7.org/privacy
+    versioned: true
+  - name: Acceptable Use Policy
+    url: https://infer.flow7.org/acceptable-use
+  - name: Legal Operator Notice
+    url: https://infer.flow7.org/legal-operator
+  - name: Refund Policy
+    url: https://infer.flow7.org/refunds
+    version: '2026-08-08'
+supply_chain_disclosure:
+  supplier_identity_in_api: private
+  api_contract: >-
+    relay.provider_disclosed is a const false in the OpenAPI schema; the serving supplier is never
+    returned on a response, and Infer states it does not attest an upstream provider identity.
+  named_in_subprocessor_notice: true
+  named_gateways:
+    - name: OpenRouter, Inc.
+      role: Gateway for Official API / First-Party Endpoint routes
+      source: https://infer.flow7.org/subprocessors
+    - name: Havenbyte LLC d/b/a ModelFlare
+      role: Gateway for Low Cost, Balanced, and Stable routes
+      source: https://infer.flow7.org/subprocessors
+    - name: Stripe, Inc. / Sold through Link, LLC
+      role: Hosted Checkout, payment processing, merchant of record, tax, refunds, disputes
+      source: https://infer.flow7.org/subprocessors
+    - name: Plus Five Five, Inc. (Resend)
+      role: Transactional email
+      source: https://infer.flow7.org/subprocessors
+    - name: Google LLC
+      role: Optional Google OAuth console login
+      source: https://infer.flow7.org/subprocessors
+    - name: Cloudflare, Inc.
+      role: DNS, CDN, edge security, bot/rate protection
+      source: https://infer.flow7.org/subprocessors
+  note: >-
+    Recorded because the two facts sit in tension and both are true. The runtime contract discloses no
+    supplier and Infer markets the pool as opaque; the legally binding Subprocessor Notice
+    nevertheless names the two ROUTING GATEWAYS by legal entity and maps each to specific price
+    options. The model labs behind those gateways remain undisclosed. Anyone reading only the API
+    would conclude the supply chain is fully private.

@@ -2,7 +2,12 @@ name: Infer by Flow7
 description: >-
   A single Responses-compatible inference API that fronts multiple model families through a private, opaque supplier
   pool. Public paid beta offering a prepaid-wallet billing model, locked prices, spending limits, and per-call receipts
-  for accountable coding-agent inference.
+  for accountable coding-agent inference. Four operations — two of them unauthenticated — cover a machine-readable
+  price catalog, per-model route status with p95 latency, an authenticated selector list, and the Responses endpoint
+  itself. Distinguished by an unusually legible commercial surface: the full rate card, including per-tier margin
+  floors and dated market-reference discounts, is served as JSON without a key, and every completed request returns a
+  receipt with the locked price version and the exact charge.
+image: https://infer.flow7.org/assets/og-infer.png?v=20260811
 url: https://infer-by-flow7.apievangelist.com/apis.yml
 created: '2026-08-11'
 modified: '2026-08-11'
@@ -15,6 +20,9 @@ tags:
   - Developer tools
   - Usage-based billing
   - Prepaid billing
+  - Agent-native
+  - Agent Skills
+  - Model routing
 apis:
   - name: Infer Responses API
     description: >-
@@ -31,20 +39,104 @@ apis:
       - Developer tools
       - Usage-based billing
       - Prepaid billing
+      - Agent-native
+      - Agent Skills
+      - Model routing
     properties:
       - type: OpenAPI
         url: https://infer.flow7.org/openapi-public.json
+      - type: OpenAPI
+        url: openapi/infer-by-flow7-public-api-openapi.yml
       - type: Documentation
+        url: https://infer.flow7.org/docs
+      - type: APIReference
         url: https://infer.flow7.org/docs
       - type: LLMsTxt
         url: https://infer.flow7.org/llms.txt
+      - type: LLMsTxt
+        url: llms/infer-by-flow7-llms.txt
       - type: AgentSkill
         url: https://infer.flow7.org/.well-known/agent-skills/index.json
+      - type: AgentSkill
+        url: skills/_index.yml
+      - type: Authentication
+        url: authentication/infer-by-flow7-authentication.yml
+      - type: Conventions
+        url: conventions/infer-by-flow7-conventions.yml
+      - type: Idempotency
+        url: conventions/infer-by-flow7-conventions.yml
+      - type: ErrorCatalog
+        url: errors/infer-by-flow7-problem-types.yml
+      - type: RateLimits
+        url: rate-limits/infer-by-flow7-rate-limits.yml
+      - type: Plans
+        url: plans/infer-by-flow7-plans-pricing.yml
+      - type: Sandbox
+        url: sandbox/infer-by-flow7-sandbox.yml
+      - type: DataModel
+        url: data-model/infer-by-flow7-data-model.yml
+      - type: Overlay
+        url: overlays/infer-by-flow7-public-api-overlay.yaml
+      - type: Lifecycle
+        url: lifecycle/infer-by-flow7-lifecycle.yml
+      - type: ChangeLog
+        url: changelog/infer-by-flow7-changelog.yml
+      - type: Conformance
+        url: conformance/infer-by-flow7-conformance.yml
 maintainers:
   - FN: Infer by Flow7
+    org: Flow7
     url: https://infer.flow7.org
 generated:
   by: apis.io/add
   model: claude-opus-4-8
   confidence: 97
   at: '2026-08-11T12:17:03.986Z'
+common:
+- type: DomainSecurity
+  url: security/infer-by-flow7-domain-security.yml
+- type: DeveloperPortal
+  url: https://infer.flow7.org/
+- type: Documentation
+  url: https://infer.flow7.org/docs
+- type: APIReference
+  url: https://infer.flow7.org/docs
+- type: GettingStarted
+  url: https://infer.flow7.org/docs#quickstart
+- type: Support
+  url: https://infer.flow7.org/support
+- type: BlogRSS
+  url: https://infer.flow7.org/feed.xml
+- type: Pricing
+  url: https://infer.flow7.org/models
+- type: SignUp
+  url: https://infer.flow7.org/signup
+- type: TermsOfService
+  url: https://infer.flow7.org/terms
+- type: PrivacyPolicy
+  url: https://infer.flow7.org/privacy
+- type: StatusPage
+  url: https://infer.flow7.org/status
+- type: StatusPage
+  url: lifecycle/infer-by-flow7-lifecycle.yml
+- type: WellKnown
+  url: well-known/infer-by-flow7-well-known.yml
+- type: APICatalog
+  url: https://infer.flow7.org/.well-known/api-catalog
+- type: APIsJSON
+  url: https://infer.flow7.org/.well-known/apis.json
+- type: Security
+  url: security/infer-by-flow7-vulnerability-disclosure.yml
+- type: VulnerabilityDisclosure
+  url: security/infer-by-flow7-vulnerability-disclosure.yml
+- type: Compliance
+  url: conformance/infer-by-flow7-conformance.yml
+- type: Packages
+  url: packages/infer-by-flow7-packages.yml
+- type: ChangeLog
+  url: changelog/infer-by-flow7-changelog.yml
+x-enrichment:
+  date: '2026-08-11'
+  status: enriched
+  artifacts_added: 28
+  pass: local-v1

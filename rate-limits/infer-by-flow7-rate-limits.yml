@@ -1,0 +1,115 @@
+generated: '2026-08-11'
+method: searched
+source: >-
+  https://infer.flow7.org/openapi-public.json (429 response + Retry-After header),
+  https://infer.flow7.org/docs, and https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling
+  (Infer's own dated observation of ceiling enforcement).
+description: >-
+  Infer publishes NO numeric request-rate limit. What it does publish, in detail, is a second and
+  more consequential limiter — a per-API-key spend ceiling, enforced against a pre-flight reservation
+  before a request is admitted. Both surface as HTTP 429, which is the trap here: a client cannot tell
+  "slow down" from "out of budget" without reading error.code.
+provider: Infer by Flow7
+providerId: infer-by-flow7
+limit_count: 0
+limit_count_note: >-
+  Zero PUBLISHED numeric request-rate limits. This is an honest zero, not a missing probe: the OpenAPI
+  declares a 429 on all four operations and a Retry-After header, and the docs describe throttling in
+  prose, but no requests-per-second, per-minute or per-day figure is stated anywhere on the public
+  surface. Unauthenticated GETs of /api/public/status and /api/public/catalog returned no RateLimit-*
+  or X-RateLimit-* headers at all.
+headers:
+  observed_on_success:
+    - name: X-Request-ID
+      note: >-
+        Probed live on GET /api/public/status (HTTP 200, 2026-08-11) — returned as x-request-id, e.g.
+        req_6c40bad6e6d044e6b58ce18f. No rate-limit headers accompanied it.
+  documented_on_429:
+    - name: Retry-After
+      type: integer seconds
+      scope: coarse request-rate limits only
+      source: components.responses.RateLimited.headers in the OpenAPI
+      note: Explicitly NOT promised for spend-ceiling rejections.
+    - name: X-Request-ID
+      type: string
+  absent:
+    - RateLimit-Limit
+    - RateLimit-Remaining
+    - RateLimit-Reset
+    - X-RateLimit-Limit
+    - X-RateLimit-Remaining
+    - X-RateLimit-Reset
+  absence_note: >-
+    No IETF draft RateLimit-* fields and no X-RateLimit-* fields on any observed response. An agent
+    therefore has no runtime budget signal from headers and must either back off blindly on 429 or
+    poll its own ledger.
+response_codes:
+  throttled: 429
+  budget_exhausted: 429
+  wallet_insufficient: 402
+  capacity_exhausted: 503
+limits: []
+spend_limits:
+  - name: Per-API-key daily spend ceiling
+    scope: api-key
+    metric: microdollars
+    window: day
+    limit: null
+    limit_note: >-
+      Customer-configurable; no default is published. Infer's Route Note 005 records a deliberately
+      set $0.010000 (10,000 microdollar) daily ceiling on a temporary key.
+    enforcement: >-
+      Checked BEFORE a request is admitted, against the full reserved maximum — not against the
+      settled charge. One active reservation equal to the ceiling blocks every concurrent request.
+    error_code: daily_budget_exceeded
+    status: 429
+    observed: >-
+      2026-08-11 18:33 UTC — one admitted request (HTTP 200) and seven concurrent contenders all
+      rejected HTTP 429 daily_budget_exceeded within 553.380-556.326 ms, dispatch spread 0.638 ms.
+      The admitted request settled at 43 microdollars and 9,957 microdollars were returned to the
+      wallet.
+    source: https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling
+  - name: Per-API-key monthly spend ceiling
+    scope: api-key
+    metric: microdollars
+    window: month
+    limit: null
+    limit_note: Customer-configurable; the same note records a matching $0.010000 monthly ceiling.
+    error_code: daily_budget_exceeded
+    status: 429
+    source: https://infer.flow7.org/notes/one-cent-concurrent-spend-ceiling
+  - name: Wallet balance
+    scope: workspace
+    metric: usd
+    window: n/a
+    limit: null
+    enforcement: >-
+      A reservation for the maximum estimated cost is taken before routing. If the wallet cannot cover
+      it, the request is rejected 402 insufficient_credits before any supplier cost is incurred.
+    error_code: insufficient_credits
+    status: 402
+    source: https://infer.flow7.org/docs
+payload_limits:
+  - name: Request body / input size
+    status: 413
+    limit: null
+    note: >-
+      "The input or request body exceeds a configured limit" — the limit is configured but not
+      published as a number.
+  - name: max_output_tokens
+    limit: null
+    note: >-
+      Client-supplied ceiling, minimum 1. The OpenAPI states "The deployment's configured maximum also
+      applies" without naming it.
+client_guidance:
+  - Read error.code on every 429 before backing off; Retry-After may be absent.
+  - >-
+    Concurrency against a low-ceiling key is effectively serialized, because the reservation — not the
+    charge — is what consumes the ceiling.
+  - >-
+    GET /api/public/status before a paid request. Infer states repeatedly that a published catalog
+    entry is not proof a selector is callable.
+related:
+  - conventions/infer-by-flow7-conventions.yml
+  - errors/infer-by-flow7-problem-types.yml
+  - plans/infer-by-flow7-plans-pricing.yml
