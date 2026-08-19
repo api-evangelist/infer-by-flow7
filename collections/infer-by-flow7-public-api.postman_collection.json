@@ -1,0 +1,1635 @@
+{
+  "item": [
+    {
+      "id": "1ad8e752-4c3c-4d08-ae14-d97fff4723c5",
+      "name": "Inference",
+      "description": {
+        "content": "Authenticated customer inference operations.",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "f8f5c8fa-74ff-417f-86f1-8c93579810c3",
+          "name": "Create a Responses-style inference request",
+          "request": {
+            "name": "Create a Responses-style inference request",
+            "description": {
+              "content": "Authenticates an Infer API key, validates a canonical model selector and routing policy, reserves the request's spend ceiling, and returns a charge record reference after completion. Exact model-family selection does not cross into another model family. Verified, funded public paid-beta workspaces can send live requests while the selected service is operational. Route eligibility still depends on the current environment, capabilities, privacy policy, region, health, authorization, and capacity; read /api/public/status immediately before use. A response model name or charge record does not attest upstream provider identity or satisfy Infer's separate strict supplier-evidence standard.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "v1",
+                "responses"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                "key": "Idempotency-Key",
+                "value": "<string>"
+              },
+              {
+                "disabled": false,
+                "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                "key": "X-Session-Affinity",
+                "value": "<string>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"<string>\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": 2589,\n      \"key_2\": true,\n      \"key_3\": \"string\"\n    },\n    {\n      \"key_0\": 1180,\n      \"key_1\": true,\n      \"key_2\": false,\n      \"key_3\": \"string\"\n    }\n  ],\n  \"text\": {\n    \"key_0\": \"string\",\n    \"key_1\": 2162.492262126402,\n    \"key_2\": \"string\"\n  },\n  \"response_format\": {\n    \"key_0\": 9508,\n    \"key_1\": 9022.63302142452\n  },\n  \"reasoning\": {\n    \"key_0\": true,\n    \"key_1\": 1319.145177568496\n  },\n  \"relay\": {\n    \"session_id\": \"<string>\",\n    \"privacy\": \"standard\",\n    \"region\": \"<string>\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "a364195d-5044-4b4a-ba90-7c5fc5be88e1",
+              "name": "Completed response as JSON, or Responses events when stream is true. Infer currently assembles the completed upstream result into an SSE event sequence; this description does not promise token-by-token upstream delivery.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"string\",\n  \"object\": \"string\",\n  \"created_at\": 1026,\n  \"status\": \"string\",\n  \"model\": \"string\",\n  \"output\": [\n    {\n      \"key_0\": 4786.170549647291,\n      \"key_1\": 8203\n    },\n    {\n      \"key_0\": true\n    }\n  ],\n  \"output_text\": \"string\",\n  \"usage\": {\n    \"input_tokens\": 6035,\n    \"input_tokens_details\": {\n      \"cached_tokens\": 3014\n    },\n    \"output_tokens\": 7032,\n    \"output_tokens_details\": {\n      \"reasoning_tokens\": 8003\n    },\n    \"total_tokens\": 4428\n  },\n  \"relay\": {\n    \"receipt_id\": \"string\",\n    \"price_version\": \"string\",\n    \"tier\": \"economy\",\n    \"resolved_model_class\": \"string\",\n    \"cache_status\": \"hit\",\n    \"environment\": \"live\",\n    \"provider_disclosed\": false,\n    \"customer_cost_usd\": 145.96225261127694,\n    \"idempotent_replay\": true\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cc19cd32-24be-480b-b50f-8f45bbd85d91",
+              "name": "The request could not be processed.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "82a58bfd-04b6-463b-afb6-66f06c6818df",
+              "name": "A valid Bearer API key is required.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2bced08c-1da5-4ec5-851d-9a8426f02241",
+              "name": "The wallet cannot cover the request's reservation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Payment Required",
+              "code": 402,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4f9df3df-3dae-4fa7-b06b-b918868a15da",
+              "name": "The key, organization, environment, or scope cannot perform this operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cb2cbb93-8441-43b3-bc8e-9c7f599afc04",
+              "name": "No active price exists for the requested selector in this environment.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "18ee624d-ccb9-4788-a237-ea08484669bf",
+              "name": "The idempotency key is in progress, expired, or otherwise cannot be replayed.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2d2079d5-e9c8-4680-9557-320da05fc74e",
+              "name": "The input or request body exceeds a configured limit.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Entity Too Large",
+              "code": 413,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b008c91b-3dce-4610-91a8-b93298f4f6ec",
+              "name": "A selector, input, output limit, session identifier, or routing option is invalid.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ea424f68-d059-4b41-b74b-7aa9bd6dfd44",
+              "name": "The request rate limit or an API-key spend ceiling was reached.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "disabled": false,
+                  "description": "Delay in seconds supplied for coarse request-rate limits.",
+                  "key": "Retry-After",
+                  "value": "4682"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1200a49f-cc04-4054-9636-6c08e632fea8",
+              "name": "Infer could not complete the operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6f43d4f3-5579-4f8f-b2f8-7575cb570766",
+              "name": "Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "responses"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Stable retry key, scoped to the organization and API-key environment. The header takes precedence over the body field. Infer generates a one-use value when omitted; clients that may retry should send one explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+                    "key": "Idempotency-Key",
+                    "value": "<string>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+                    "key": "X-Session-Affinity",
+                    "value": "<string>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"model\": \"<string>\",\n  \"input\": \"string\",\n  \"max_output_tokens\": \"<integer>\",\n  \"stream\": false,\n  \"tools\": [\n    {\n      \"key_0\": \"string\",\n      \"key_1\": \"string\"\n    },\n    {\n      \"key_0\": false,\n      \"key_1\": false\n    }\n  ],\n  \"text\": {\n    \"key_0\": 8884.42133951785,\n    \"key_1\": \"string\",\n    \"key_2\": false,\n    \"key_3\": true\n  },\n  \"response_format\": {\n    \"key_0\": 1746.3564970293667,\n    \"key_1\": false,\n    \"key_2\": false\n  },\n  \"reasoning\": {\n    \"key_0\": false,\n    \"key_1\": \"string\"\n  },\n  \"relay\": {\n    \"session_id\": \"string\",\n    \"privacy\": \"standard\",\n    \"region\": \"string\"\n  },\n  \"session_id\": \"<string>\",\n  \"idempotency_key\": \"<string>\",\n  \"request_id\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "7286e1a5-2133-40bf-badc-bd2f30dfd537",
+      "name": "Catalog",
+      "description": {
+        "content": "Model selectors, published prices, and route capability metadata.",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "ee9763ef-1553-49e4-8038-e9193e7b3ecc",
+          "name": "Read the published model and price catalog",
+          "request": {
+            "name": "Read the published model and price catalog",
+            "description": {
+              "content": "Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields. A catalog row or published price is not proof that its selector is callable. The response's environment and runtime fields are authoritative. Requesting the live environment falls back to sandbox while live inference is disabled. Private routing topology is excluded.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "public",
+                "catalog"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "environment",
+                  "value": "<string>",
+                  "description": "Requested catalog environment. The response environment may be sandbox when live inference is disabled."
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "4a743b25-b24a-4777-8717-36a62631e86a",
+              "name": "Published catalog. Inspect each model's runtime status before use.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "catalog"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "environment",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"currency\": \"string\",\n  \"unit\": \"string\",\n  \"environment\": \"sandbox\",\n  \"simulated\": false,\n  \"live_available\": false,\n  \"models\": [\n    {\n      \"slug\": \"string\",\n      \"name\": \"string\",\n      \"kind\": \"string\",\n      \"environment\": \"sandbox\",\n      \"tiers\": {\n        \"key_0\": {\n          \"selector\": \"infer/sgyma:stable\",\n          \"available\": true,\n          \"privacy_modes\": [\n            \"standard\",\n            \"zero-retention\"\n          ],\n          \"input_per_million_usd\": 4207.194694529235,\n          \"cached_input_per_million_usd\": 7640.704764213105,\n          \"cache_write_per_million_usd\": 5607.336626845701,\n          \"output_per_million_usd\": 8294.71413004362,\n          \"request_usd\": 7454.075662175604,\n          \"minimum_margin\": 510.1325222482034,\n          \"target_contribution_margin\": 6208.850793368348,\n          \"retry_budget\": 83.35560283864729,\n          \"price_version\": \"string\"\n        }\n      },\n      \"runtime\": {\n        \"status\": \"operational\",\n        \"p95_latency_ms\": 6650,\n        \"max_context_tokens\": 6567,\n        \"max_output_tokens\": 8044,\n        \"tools\": true,\n        \"structured_outputs\": false,\n        \"vision\": false,\n        \"streaming\": true,\n        \"responses_api\": false\n      }\n    },\n    {\n      \"slug\": \"string\",\n      \"name\": \"string\",\n      \"kind\": \"string\",\n      \"environment\": \"live\",\n      \"tiers\": {\n        \"key_0\": {\n          \"selector\": \"infer/und:balanced\",\n          \"available\": true,\n          \"privacy_modes\": [\n            \"no-training\",\n            \"no-training\"\n          ],\n          \"input_per_million_usd\": 2149.4467945486017,\n          \"cached_input_per_million_usd\": 6639.59639460325,\n          \"cache_write_per_million_usd\": 3313.4782544099794,\n          \"output_per_million_usd\": 2135.5675575685905,\n          \"request_usd\": 7515.2002480225565,\n          \"minimum_margin\": 9504.639592899533,\n          \"target_contribution_margin\": 8601.561524656057,\n          \"retry_budget\": 6989.951421467899,\n          \"price_version\": \"string\"\n        }\n      },\n      \"runtime\": {\n        \"status\": \"unavailable\",\n        \"p95_latency_ms\": 7668,\n        \"max_context_tokens\": 2900,\n        \"max_output_tokens\": 9522,\n        \"tools\": false,\n        \"structured_outputs\": false,\n        \"vision\": false,\n        \"streaming\": false,\n        \"responses_api\": false\n      }\n    }\n  ],\n  \"disclosure\": {\n    \"supplier_identity\": \"string\",\n    \"environment\": \"live\",\n    \"statement\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "04c96845-6167-4540-8c91-a581b50df1be",
+              "name": "The request rate limit or an API-key spend ceiling was reached.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "catalog"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "environment",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "disabled": false,
+                  "description": "Delay in seconds supplied for coarse request-rate limits.",
+                  "key": "Retry-After",
+                  "value": "4682"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e88144e8-db6b-433e-a1d4-32e999430401",
+              "name": "Infer could not complete the operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "catalog"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "environment",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "18e57db3-e25a-42b9-ab41-c3561c65d0ba",
+          "name": "List selectors for an API key's environment",
+          "request": {
+            "name": "List selectors for an API key's environment",
+            "description": {
+              "content": "Returns selectors for the authenticated API key's environment. For live keys, every returned selector has current public-callable capacity for its exact price option at response time; availability can change, so consult public status immediately before use. Sandbox keys list active test prices. The key must carry the inference:write scope.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "v1",
+                "models"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "5a840f4a-40d8-472e-8e49-4ccba6f9df6e",
+              "name": "Currently callable live selectors, or active sandbox selectors, for the key's environment.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "models"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"object\": \"string\",\n  \"data\": [\n    {\n      \"id\": \"infer/wq_peh5:official\",\n      \"object\": \"string\",\n      \"owned_by\": \"string\",\n      \"relay\": {\n        \"name\": \"string\",\n        \"kind\": \"string\",\n        \"tier\": \"priority\",\n        \"input_per_million_usd\": 4920.604710385067,\n        \"cached_input_per_million_usd\": 9165.03050739709,\n        \"output_per_million_usd\": 6636.069466825624\n      }\n    },\n    {\n      \"id\": \"infer/5qei8:stable\",\n      \"object\": \"string\",\n      \"owned_by\": \"string\",\n      \"relay\": {\n        \"name\": \"string\",\n        \"kind\": \"string\",\n        \"tier\": \"balanced\",\n        \"input_per_million_usd\": 7895.504706188706,\n        \"cached_input_per_million_usd\": 8292.073513606176,\n        \"output_per_million_usd\": 5695.024232722363\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "af3b9f13-b07e-469d-9373-f44566f8a39d",
+              "name": "A valid Bearer API key is required.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "models"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d69e091b-62b0-42ce-8f01-bc63bce9aeaa",
+              "name": "The key, organization, environment, or scope cannot perform this operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "models"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9be80e5a-44e0-4f80-b30c-f895728dff21",
+              "name": "The request rate limit or an API-key spend ceiling was reached.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "models"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "disabled": false,
+                  "description": "Delay in seconds supplied for coarse request-rate limits.",
+                  "key": "Retry-After",
+                  "value": "4682"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0d0253cb-a48d-4e96-8e8d-ff100abe7826",
+              "name": "Infer could not complete the operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "v1",
+                    "models"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    },
+    {
+      "id": "4769bee6-c6ca-4c3e-9ca0-eea91d360e56",
+      "name": "Status",
+      "description": {
+        "content": "Customer-facing service state without private routing topology.",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "2a1cb4fc-eb9a-4eb4-8b2a-c361c015ab82",
+          "name": "Read customer-facing route status",
+          "request": {
+            "name": "Read customer-facing route status",
+            "description": {
+              "content": "Returns an overall state and one state per published service. The simulated field distinguishes sandbox health from live service health. Private route counts, failure domains, and provider identities are not returned.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "public",
+                "status"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "c252a369-7315-4e47-b838-4ca4d5000567",
+              "name": "Current customer-facing status.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"environment\": \"live\",\n  \"simulated\": true,\n  \"updated_at\": \"2016-01-20T05:21:32.319Z\",\n  \"status\": \"partial_outage\",\n  \"services\": [\n    {\n      \"service\": \"string\",\n      \"status\": \"operational\",\n      \"p95_latency_ms\": 8086\n    },\n    {\n      \"service\": \"string\",\n      \"status\": \"operational\",\n      \"p95_latency_ms\": 6527\n    }\n  ],\n  \"note\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ba54b339-da7b-4781-8e43-7d81a0d60411",
+              "name": "The request rate limit or an API-key spend ceiling was reached.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "disabled": false,
+                  "description": "Delay in seconds supplied for coarse request-rate limits.",
+                  "key": "Retry-After",
+                  "value": "4682"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "074df82e-5ca0-4f51-a4c3-81b2105e561f",
+              "name": "Infer could not complete the operation.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "public",
+                    "status"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "disabled": false,
+                  "description": "Request correlation identifier generated or safely accepted by Infer.",
+                  "key": "X-Request-ID",
+                  "value": "string"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"string\",\n    \"message\": \"string\",\n    \"request_id\": \"string\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://infer.flow7.org",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "b10c6a85-ae8a-459a-ae36-f437ec7b4c59",
+    "name": "Infer by Flow7 Public API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "This description covers Infer's public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources. Public registration creates a workspace; the account email must be verified, the live wallet must be funded, and a scoped live API key must be created before paid live inference. Route availability is dynamic, so read the public status resource before sending traffic. Strict supplier-evidence readiness is a separate standard, and Infer does not attest an upstream provider identity.\n\nContact Support:\n Name: Infer by Flow7 support",
+      "type": "text/plain"
+    }
+  }
+}

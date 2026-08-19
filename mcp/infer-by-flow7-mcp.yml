@@ -4,79 +4,78 @@ status: candidate
 source: openapi/infer-by-flow7-public-api-openapi.yml
 published_server: null
 searched:
-  note: >-
-    Infer operates NO MCP server, and says so plainly rather than leaving it ambiguous. This file is a
-    CANDIDATE tool shape derived from the published OpenAPI. It carries NO `type: MCPServer` pointer in
-    apis.yml — wiring one would credit Infer with an agent surface it does not run.
+  note: 'Infer operates NO MCP server, and says so plainly rather than leaving it ambiguous. This file
+    is a CANDIDATE tool shape derived from the published OpenAPI. It carries NO `type: MCPServer` pointer
+    in apis.yml — wiring one would credit Infer with an agent surface it does not run.'
   probes:
-    - url: https://infer.flow7.org/mcp
-      method: POST tools/list
-      status: 404
-    - url: https://infer.flow7.org/.well-known/mcp.json
-      method: GET
-      status: 404
-    - url: https://infer.flow7.org/.well-known/oauth-authorization-server
-      method: GET
-      status: 404
-      note: Checked because an MCP server would normally advertise one; absent, consistent with no server.
-    - url: https://infer.flow7.org/.well-known/oauth-protected-resource
-      method: GET
-      status: 404
+  - url: https://infer.flow7.org/mcp
+    method: POST tools/list
+    status: 404
+  - url: https://infer.flow7.org/.well-known/mcp.json
+    method: GET
+    status: 404
+  - url: https://infer.flow7.org/.well-known/oauth-authorization-server
+    method: GET
+    status: 404
+    note: Checked because an MCP server would normally advertise one; absent, consistent with no server.
+  - url: https://infer.flow7.org/.well-known/oauth-protected-resource
+    method: GET
+    status: 404
   third_party: []
   llms_txt_tool_list: none
-  note_on_llms_txt: >-
-    /llms.txt lists resources and diagnostics, not MCP tools. It contains no tool inventory to fall
-    back to.
+  note_on_llms_txt: /llms.txt lists resources and diagnostics, not MCP tools. It contains no tool inventory
+    to fall back to.
 agent_surface_actually_shipped:
   kind: Agent Skills
   discovery: https://infer.flow7.org/.well-known/agent-skills/index.json
   spec: https://schemas.agentskills.io/discovery/0.2.0/schema.json
   count: 3
   digests: SHA-256 per artifact
-  note: >-
-    This is the finding worth recording. Infer made a deliberate, documented choice to ship packaged
-    Agent Skills — which run in the agent's own process against the caller's own key — instead of a
-    hosted MCP server that would sit between the agent and the API and require Infer to hold or
-    broker a credential. For a product whose entire pitch is spend accountability and never handling
-    a user's key, that is a coherent architectural position, not a missing feature. See skills/.
+  note: This is the finding worth recording. Infer made a deliberate, documented choice to ship packaged
+    Agent Skills — which run in the agent's own process against the caller's own key — instead of a hosted
+    MCP server that would sit between the agent and the API and require Infer to hold or broker a credential.
+    For a product whose entire pitch is spend accountability and never handling a user's key, that is
+    a coherent architectural position, not a missing feature. See skills/.
 candidate_tools:
-  - name: get_public_catalog
-    maps_to: GET /api/public/catalog
-    operation_id: getPublicCatalog
-    auth_required: false
-    description: >-
-      Read published selectors, per-million prices, cache rates, privacy modes and per-model runtime
-      capabilities. Optional `environment` query (sandbox | live).
-    input_schema_source: parameters of getPublicCatalog
-  - name: get_public_status
-    maps_to: GET /api/public/status
-    operation_id: getPublicStatus
-    auth_required: false
-    description: >-
-      Read overall and per-service operational state with p95 latency. Must be called before
-      recommending or sending any paid request.
-    input_schema_source: no parameters
-  - name: list_models
-    maps_to: GET /v1/models
-    operation_id: listModels
-    auth_required: true
-    scope: inference:write
-    description: List selectors currently callable for the authenticated key's environment.
-    input_schema_source: no parameters
-  - name: create_response
-    maps_to: POST /v1/responses
-    operation_id: createResponse
-    auth_required: true
-    scope: inference:write
-    spends_money: true
-    description: >-
-      Create a Responses-style inference request against a canonical selector. Reserves the maximum
-      estimated cost before routing and returns a receipt.
-    input_schema_source: CreateResponseRequest + Idempotency-Key and X-Session-Affinity headers
-    guardrails:
-      - Would require explicit human confirmation — every successful call charges the wallet.
-      - A failed call's Idempotency-Key is terminal; a retry needs a new key.
+- name: get_public_catalog
+  maps_to: GET /api/public/catalog
+  operation_id: getPublicCatalog
+  auth_required: false
+  description: Read published selectors, per-million prices, cache rates, privacy modes and per-model
+    runtime capabilities. Optional `environment` query (sandbox | live).
+  input_schema_source: parameters of getPublicCatalog
+- name: get_public_status
+  maps_to: GET /api/public/status
+  operation_id: getPublicStatus
+  auth_required: false
+  description: Read overall and per-service operational state with p95 latency. Must be called before
+    recommending or sending any paid request.
+  input_schema_source: no parameters
+- name: list_models
+  maps_to: GET /v1/models
+  operation_id: listModels
+  auth_required: true
+  scope: inference:write
+  description: List selectors currently callable for the authenticated key's environment.
+  input_schema_source: no parameters
+- name: create_response
+  maps_to: POST /v1/responses
+  operation_id: createResponse
+  auth_required: true
+  scope: inference:write
+  spends_money: true
+  description: Create a Responses-style inference request against a canonical selector. Reserves the maximum
+    estimated cost before routing and returns a receipt.
+  input_schema_source: CreateResponseRequest + Idempotency-Key and X-Session-Affinity headers
+  guardrails:
+  - Would require explicit human confirmation — every successful call charges the wallet.
+  - A failed call's Idempotency-Key is terminal; a retry needs a new key.
 coverage:
   openapi_operations: 4
   candidate_tools: 4
   unmapped_operations: 0
+deployment:
+  mode: none
+  verified: derived
+  checked: '2026-08-12'
+  source: catalog MCP census

@@ -1,0 +1,108 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Infer by Flow7 Public API",
+    "version": "0.4.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Catalog",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Read the published model and price catalog",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://infer.flow7.org/api/public/catalog",
+            "params": [
+              {
+                "name": "environment",
+                "value": "",
+                "type": "query",
+                "description": "Requested catalog environment. The response environment may be sandbox when live inference is disabled."
+              }
+            ]
+          },
+          "docs": "Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields. A catalog row or published price is not proof that its selector is callable. The response's environment and runtime fields are authoritative. Requesting the live environment falls back to sandbox while live inference is disabled. Private routing topology is excluded."
+        },
+        {
+          "info": {
+            "name": "List selectors for an API key's environment",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://infer.flow7.org/v1/models",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Returns selectors for the authenticated API key's environment. For live keys, every returned selector has current public-callable capacity for its exact price option at response time; availability can change, so consult public status immediately before use. Sandbox keys list active test prices. The key must carry the inference:write scope."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Status",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Read customer-facing route status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://infer.flow7.org/api/public/status"
+          },
+          "docs": "Returns an overall state and one state per published service. The simulated field distinguishes sandbox health from live service health. Private route counts, failure domains, and provider identities are not returned."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Inference",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Create a Responses-style inference request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://infer.flow7.org/v1/responses",
+            "headers": [
+              {
+                "name": "Idempotency-Key",
+                "value": ""
+              },
+              {
+                "name": "X-Session-Affinity",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Authenticates an Infer API key, validates a canonical model selector and routing policy, reserves the request's spend ceiling, and returns a charge record reference after completion. Exact model-family selection does not cross into another model family. Verified, funded public paid-beta workspaces can send live requests while the selected service is operational. Route eligibility still depends on the current environment, capabilities, privacy policy, region, health, authorization, and capacity; "
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
