@@ -17,6 +17,17 @@ tags:
   - LLM API gateway
   - Responses-compatible API
   - Coding-agent tooling
+  - Developer Tools
+  - Usage-Based Billing
+  - Prepaid billing
+  - agent-native
+  - Agent Skills
+  - Model Routing
+tags_raw:
+  - AI/ML inference
+  - LLM API gateway
+  - Responses-compatible API
+  - Coding-agent tooling
   - Developer tools
   - Usage-based billing
   - Prepaid billing
@@ -32,6 +43,17 @@ apis:
     humanURL: https://infer.flow7.org/docs
     baseURL: https://infer.flow7.org/v1
     tags:
+      - AI/ML inference
+      - LLM API gateway
+      - Responses-compatible API
+      - Coding-agent tooling
+      - Developer Tools
+      - Usage-Based Billing
+      - Prepaid billing
+      - agent-native
+      - Agent Skills
+      - Model Routing
+    tags_raw:
       - AI/ML inference
       - LLM API gateway
       - Responses-compatible API
