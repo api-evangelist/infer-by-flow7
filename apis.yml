@@ -35,76 +35,126 @@ tags_raw:
   - Agent Skills
   - Model routing
 apis:
-  - name: Infer Responses API
-    description: >-
-      Responses-compatible inference REST API fronting many model families through opaque routing, with unauthenticated
-      public catalog/status endpoints and authenticated model-list and Responses endpoints. Includes a public OpenAPI
-      3.1 contract, RFC 9727 api-catalog, llms.txt, and three published agent skills.
-    humanURL: https://infer.flow7.org/docs
-    baseURL: https://infer.flow7.org/v1
-    tags:
-      - AI/ML inference
-      - LLM API gateway
-      - Responses-compatible API
-      - Coding-agent tooling
-      - Developer Tools
-      - Usage-Based Billing
-      - Prepaid billing
-      - agent-native
-      - Agent Skills
-      - Model Routing
-    tags_raw:
-      - AI/ML inference
-      - LLM API gateway
-      - Responses-compatible API
-      - Coding-agent tooling
-      - Developer tools
-      - Usage-based billing
-      - Prepaid billing
-      - Agent-native
-      - Agent Skills
-      - Model routing
-    properties:
-      - type: OpenAPI
-        url: https://infer.flow7.org/openapi-public.json
-      - type: OpenAPI
-        url: openapi/infer-by-flow7-public-api-openapi.yml
-      - type: Documentation
-        url: https://infer.flow7.org/docs
-      - type: APIReference
-        url: https://infer.flow7.org/docs
-      - type: LLMsTxt
-        url: https://infer.flow7.org/llms.txt
-      - type: LLMsTxt
-        url: llms/infer-by-flow7-llms.txt
-      - type: AgentSkill
-        url: https://infer.flow7.org/.well-known/agent-skills/index.json
-      - type: AgentSkill
-        url: skills/_index.yml
-      - type: Authentication
-        url: authentication/infer-by-flow7-authentication.yml
-      - type: Conventions
-        url: conventions/infer-by-flow7-conventions.yml
-      - type: Idempotency
-        url: conventions/infer-by-flow7-conventions.yml
-      - type: ErrorCatalog
-        url: errors/infer-by-flow7-problem-types.yml
-      - type: RateLimits
-        url: rate-limits/infer-by-flow7-rate-limits.yml
-      - type: Plans
-        url: plans/infer-by-flow7-plans-pricing.yml
-      - type: Sandbox
-        url: sandbox/infer-by-flow7-sandbox.yml
-      - type: DataModel
-        url: data-model/infer-by-flow7-data-model.yml
-      - type: Overlay
-        url: overlays/infer-by-flow7-public-api-overlay.yaml
-      - type: Lifecycle
-        url: lifecycle/infer-by-flow7-lifecycle.yml
-      - type: ChangeLog
-        url: changelog/infer-by-flow7-changelog.yml
-      - type: Conformance
-        url: conformance/infer-by-flow7-conformance.yml
+- aid: infer-by-flow7:infer-by-flow7-catalog-api
+  name: Infer by Flow7 Catalog API
+  description: Model selectors, published prices, and route capability metadata.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Catalog
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-catalog-api-openapi.yml
+  - type: Documentation
+    url: https://infer.flow7.org/docs
+  - type: APIReference
+    url: https://infer.flow7.org/docs
+  - type: LLMsTxt
+    url: https://infer.flow7.org/llms.txt
+  - type: LLMsTxt
+    url: llms/infer-by-flow7-llms.txt
+  - type: Authentication
+    url: authentication/infer-by-flow7-authentication.yml
+  - type: Conventions
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: Idempotency
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: ErrorCatalog
+    url: errors/infer-by-flow7-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/infer-by-flow7-rate-limits.yml
+  - type: Plans
+    url: plans/infer-by-flow7-plans-pricing.yml
+  - type: Sandbox
+    url: sandbox/infer-by-flow7-sandbox.yml
+  - type: DataModel
+    url: data-model/infer-by-flow7-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/infer-by-flow7-lifecycle.yml
+  - type: ChangeLog
+    url: changelog/infer-by-flow7-changelog.yml
+  - type: Conformance
+    url: conformance/infer-by-flow7-conformance.yml
+- aid: infer-by-flow7:infer-by-flow7-inference-api
+  name: Infer by Flow7 Inference API
+  description: Authenticated customer inference operations.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Inference
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-inference-api-openapi.yml
+  - type: Documentation
+    url: https://infer.flow7.org/docs
+  - type: APIReference
+    url: https://infer.flow7.org/docs
+  - type: LLMsTxt
+    url: https://infer.flow7.org/llms.txt
+  - type: LLMsTxt
+    url: llms/infer-by-flow7-llms.txt
+  - type: Authentication
+    url: authentication/infer-by-flow7-authentication.yml
+  - type: Conventions
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: Idempotency
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: ErrorCatalog
+    url: errors/infer-by-flow7-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/infer-by-flow7-rate-limits.yml
+  - type: Plans
+    url: plans/infer-by-flow7-plans-pricing.yml
+  - type: Sandbox
+    url: sandbox/infer-by-flow7-sandbox.yml
+  - type: DataModel
+    url: data-model/infer-by-flow7-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/infer-by-flow7-lifecycle.yml
+  - type: ChangeLog
+    url: changelog/infer-by-flow7-changelog.yml
+  - type: Conformance
+    url: conformance/infer-by-flow7-conformance.yml
+- aid: infer-by-flow7:infer-by-flow7-status-api
+  name: Infer by Flow7 Status API
+  description: Customer-facing service state without private routing topology.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Status
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-status-api-openapi.yml
+  - type: Documentation
+    url: https://infer.flow7.org/docs
+  - type: APIReference
+    url: https://infer.flow7.org/docs
+  - type: LLMsTxt
+    url: https://infer.flow7.org/llms.txt
+  - type: LLMsTxt
+    url: llms/infer-by-flow7-llms.txt
+  - type: Authentication
+    url: authentication/infer-by-flow7-authentication.yml
+  - type: Conventions
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: Idempotency
+    url: conventions/infer-by-flow7-conventions.yml
+  - type: ErrorCatalog
+    url: errors/infer-by-flow7-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/infer-by-flow7-rate-limits.yml
+  - type: Plans
+    url: plans/infer-by-flow7-plans-pricing.yml
+  - type: Sandbox
+    url: sandbox/infer-by-flow7-sandbox.yml
+  - type: DataModel
+    url: data-model/infer-by-flow7-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/infer-by-flow7-lifecycle.yml
+  - type: ChangeLog
+    url: changelog/infer-by-flow7-changelog.yml
+  - type: Conformance
+    url: conformance/infer-by-flow7-conformance.yml
 maintainers:
   - FN: Infer by Flow7
     org: Flow7
@@ -115,6 +165,12 @@ generated:
   confidence: 97
   at: '2026-08-11T12:17:03.986Z'
 common:
+- type: AgentSkill
+  url: https://infer.flow7.org/.well-known/agent-skills/index.json
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Overlay
+  url: overlays/infer-by-flow7-public-api-overlay.yaml
 - type: MCPServer
   url: mcp/infer-by-flow7-mcp.yml
 - type: DomainSecurity
