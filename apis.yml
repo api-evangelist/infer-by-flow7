@@ -7,6 +7,18 @@ description: >-
   itself. Distinguished by an unusually legible commercial surface: the full rate card, including per-tier margin
   floors and dated market-reference discounts, is served as JSON without a key, and every completed request returns a
   receipt with the locked price version and the exact charge.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: true
+  label: Hosted service · you call their endpoint
+  confidence: high
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://infer.flow7.org/assets/og-infer.png?v=20260811
 url: https://raw.githubusercontent.com/api-evangelist/infer-by-flow7/refs/heads/main/apis.yml
 created: '2026-08-11'
