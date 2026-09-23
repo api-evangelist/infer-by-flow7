@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   title: Infer by Flow7 Public Status API
   summary: Authenticated Responses inference plus public catalog and route-status metadata.
-  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources. Public registration creates a workspace; the account email must be verified, the live wallet must be funded, and a scoped live API key must be created before paid live inference. Route availability is dynamic, so read the public status resource before sending traffic. Strict supplier-evidence readiness is a separate standard, and Infer does not attest an upstream provider identity.'
+  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources.'
   termsOfService: https://infer.flow7.org/terms
   contact:
     name: Infer by Flow7 support
@@ -44,6 +44,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   schemas:
     ErrorEnvelope:
       type: object
@@ -124,15 +129,6 @@ components:
           - 'null'
       additionalProperties: true
   responses:
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
     RateLimited:
       description: The request rate limit or an API-key spend ceiling was reached.
       headers:
@@ -147,11 +143,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   securitySchemes:
     bearerAuth:
       type: http

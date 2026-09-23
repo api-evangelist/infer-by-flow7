@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   title: Infer by Flow7 Public Catalog API
   summary: Authenticated Responses inference plus public catalog and route-status metadata.
-  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources. Public registration creates a workspace; the account email must be verified, the live wallet must be funded, and a scoped live API key must be created before paid live inference. Route availability is dynamic, so read the public status resource before sending traffic. Strict supplier-evidence readiness is a separate standard, and Infer does not attest an upstream provider identity.'
+  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources.'
   termsOfService: https://infer.flow7.org/terms
   contact:
     name: Infer by Flow7 support
@@ -82,6 +82,198 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   schemas:
+    ModelPrice:
+      type: object
+      required:
+      - name
+      - kind
+      - tier
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - output_per_million_usd
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+      additionalProperties: false
+    CatalogModel:
+      type: object
+      required:
+      - slug
+      - name
+      - kind
+      - environment
+      - tiers
+      - runtime
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        tiers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CatalogTier'
+        runtime:
+          $ref: '#/components/schemas/CatalogRuntime'
+      description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
+      additionalProperties: true
+    CatalogRuntime:
+      type: object
+      required:
+      - status
+      - p95_latency_ms
+      - max_context_tokens
+      - max_output_tokens
+      - tools
+      - structured_outputs
+      - vision
+      - streaming
+      - responses_api
+      properties:
+        status:
+          type: string
+          enum:
+          - operational
+          - unavailable
+        p95_latency_ms:
+          type:
+          - integer
+          - 'null'
+        max_context_tokens:
+          type:
+          - integer
+          - 'null'
+        max_output_tokens:
+          type:
+          - integer
+          - 'null'
+        tools:
+          type: boolean
+        structured_outputs:
+          type: boolean
+        vision:
+          type: boolean
+        streaming:
+          type: boolean
+        responses_api:
+          type: boolean
+      additionalProperties: false
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - owned_by
+      - relay
+      properties:
+        id:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        object:
+          type: string
+          const: model
+        owned_by:
+          type: string
+          const: infer
+        relay:
+          $ref: '#/components/schemas/ModelPrice'
+      additionalProperties: false
+    PublicCatalog:
+      type: object
+      required:
+      - currency
+      - unit
+      - environment
+      - simulated
+      - live_available
+      - models
+      - disclosure
+      properties:
+        currency:
+          type: string
+          const: USD
+        unit:
+          type: string
+          const: per_million_tokens
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        live_available:
+          type: boolean
+          description: Whether live inference is enabled globally. This alone does not establish selector callability.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogModel'
+        disclosure:
+          $ref: '#/components/schemas/CatalogDisclosure'
+      additionalProperties: false
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
+    CatalogDisclosure:
+      type: object
+      required:
+      - supplier_identity
+      - environment
+      - statement
+      properties:
+        supplier_identity:
+          type: string
+          const: private
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        statement:
+          type: string
+      additionalProperties: false
+    ModelList:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+      additionalProperties: false
     CatalogTier:
       type: object
       required:
@@ -131,91 +323,6 @@ components:
         price_version:
           type: string
       additionalProperties: true
-    ErrorEnvelope:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-      additionalProperties: false
-    CatalogModel:
-      type: object
-      required:
-      - slug
-      - name
-      - kind
-      - environment
-      - tiers
-      - runtime
-      properties:
-        slug:
-          type: string
-        name:
-          type: string
-        kind:
-          type: string
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        tiers:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/CatalogTier'
-        runtime:
-          $ref: '#/components/schemas/CatalogRuntime'
-      description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
-      additionalProperties: true
-    PublicCatalog:
-      type: object
-      required:
-      - currency
-      - unit
-      - environment
-      - simulated
-      - live_available
-      - models
-      - disclosure
-      properties:
-        currency:
-          type: string
-          const: USD
-        unit:
-          type: string
-          const: per_million_tokens
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        live_available:
-          type: boolean
-          description: Whether live inference is enabled globally. This alone does not establish selector callability.
-        models:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogModel'
-        disclosure:
-          $ref: '#/components/schemas/CatalogDisclosure'
-      additionalProperties: false
-    ModelList:
-      type: object
-      required:
-      - object
-      - data
-      properties:
-        object:
-          type: string
-          const: list
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Model'
-      additionalProperties: false
     ErrorDetail:
       type: object
       required:
@@ -232,116 +339,28 @@ components:
           - string
           - 'null'
       additionalProperties: true
-    ModelPrice:
-      type: object
-      required:
-      - name
-      - kind
-      - tier
-      - input_per_million_usd
-      - cached_input_per_million_usd
-      - output_per_million_usd
-      properties:
-        name:
-          type: string
-        kind:
-          type: string
-        tier:
-          type: string
-          enum:
-          - economy
-          - balanced
-          - priority
-          - official
-        input_per_million_usd:
-          type: number
-        cached_input_per_million_usd:
-          type: number
-        output_per_million_usd:
-          type: number
-      additionalProperties: false
-    CatalogRuntime:
-      type: object
-      required:
-      - status
-      - p95_latency_ms
-      - max_context_tokens
-      - max_output_tokens
-      - tools
-      - structured_outputs
-      - vision
-      - streaming
-      - responses_api
-      properties:
-        status:
-          type: string
-          enum:
-          - operational
-          - unavailable
-        p95_latency_ms:
-          type:
-          - integer
-          - 'null'
-        max_context_tokens:
-          type:
-          - integer
-          - 'null'
-        max_output_tokens:
-          type:
-          - integer
-          - 'null'
-        tools:
-          type: boolean
-        structured_outputs:
-          type: boolean
-        vision:
-          type: boolean
-        streaming:
-          type: boolean
-        responses_api:
-          type: boolean
-      additionalProperties: false
-    CatalogDisclosure:
-      type: object
-      required:
-      - supplier_identity
-      - environment
-      - statement
-      properties:
-        supplier_identity:
-          type: string
-          const: private
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        statement:
-          type: string
-      additionalProperties: false
-    Model:
-      type: object
-      required:
-      - id
-      - object
-      - owned_by
-      - relay
-      properties:
-        id:
-          type: string
-          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
-        object:
-          type: string
-          const: model
-        owned_by:
-          type: string
-          const: infer
-        relay:
-          $ref: '#/components/schemas/ModelPrice'
-      additionalProperties: false
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   responses:
-    Forbidden:
-      description: The key, organization, environment, or scope cannot perform this operation.
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -358,8 +377,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    InternalError:
-      description: Infer could not complete the operation.
+    Forbidden:
+      description: The key, organization, environment, or scope cannot perform this operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -367,25 +386,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    RateLimited:
-      description: The request rate limit or an API-key spend ceiling was reached.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-        Retry-After:
-          description: Delay in seconds supplied for coarse request-rate limits.
-          schema:
-            type: integer
-            minimum: 0
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http
