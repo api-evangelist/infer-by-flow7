@@ -82,62 +82,136 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   schemas:
-    ModelPrice:
+    ErrorDetail:
       type: object
       required:
-      - name
-      - kind
-      - tier
-      - input_per_million_usd
-      - cached_input_per_million_usd
-      - output_per_million_usd
+      - code
+      - message
+      - request_id
       properties:
-        name:
+        code:
           type: string
-        kind:
+        message:
           type: string
-        tier:
+        request_id:
+          type:
+          - string
+          - 'null'
+      additionalProperties: true
+    ModelList:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
           type: string
-          enum:
-          - economy
-          - balanced
-          - priority
-          - official
-        input_per_million_usd:
-          type: number
-        cached_input_per_million_usd:
-          type: number
-        output_per_million_usd:
-          type: number
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
       additionalProperties: false
-    CatalogModel:
+    CatalogDisclosure:
       type: object
       required:
-      - slug
-      - name
-      - kind
+      - supplier_identity
       - environment
-      - tiers
-      - runtime
+      - statement
       properties:
-        slug:
+        supplier_identity:
           type: string
-        name:
-          type: string
-        kind:
-          type: string
+          const: private
         environment:
           type: string
           enum:
           - sandbox
           - live
-        tiers:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/CatalogTier'
-        runtime:
-          $ref: '#/components/schemas/CatalogRuntime'
-      description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
+        statement:
+          type: string
+      additionalProperties: false
+    PublicCatalog:
+      type: object
+      required:
+      - currency
+      - unit
+      - environment
+      - simulated
+      - live_available
+      - models
+      - disclosure
+      properties:
+        currency:
+          type: string
+          const: USD
+        unit:
+          type: string
+          const: per_million_tokens
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        live_available:
+          type: boolean
+          description: Whether live inference is enabled globally. This alone does not establish selector callability.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogModel'
+        disclosure:
+          $ref: '#/components/schemas/CatalogDisclosure'
+      additionalProperties: false
+    CatalogTier:
+      type: object
+      required:
+      - selector
+      - available
+      - privacy_modes
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - cache_write_per_million_usd
+      - output_per_million_usd
+      - request_usd
+      - minimum_margin
+      - target_contribution_margin
+      - retry_budget
+      - price_version
+      properties:
+        selector:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        available:
+          type: boolean
+          description: True only when this exact selector currently has public-callable capacity for the default standard privacy mode. Use the authenticated /v1/models list for actionable live selectors.
+        privacy_modes:
+          type: array
+          items:
+            type: string
+            enum:
+            - standard
+            - no-training
+            - zero-retention
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        cache_write_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+        request_usd:
+          type: number
+        minimum_margin:
+          type: number
+        target_contribution_margin:
+          type: number
+        retry_budget:
+          type: number
+        price_version:
+          type: string
       additionalProperties: true
     CatalogRuntime:
       type: object
@@ -200,40 +274,6 @@ components:
         relay:
           $ref: '#/components/schemas/ModelPrice'
       additionalProperties: false
-    PublicCatalog:
-      type: object
-      required:
-      - currency
-      - unit
-      - environment
-      - simulated
-      - live_available
-      - models
-      - disclosure
-      properties:
-        currency:
-          type: string
-          const: USD
-        unit:
-          type: string
-          const: per_million_tokens
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        live_available:
-          type: boolean
-          description: Whether live inference is enabled globally. This alone does not establish selector callability.
-        models:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogModel'
-        disclosure:
-          $ref: '#/components/schemas/CatalogDisclosure'
-      additionalProperties: false
     ErrorEnvelope:
       type: object
       required:
@@ -242,102 +282,62 @@ components:
         error:
           $ref: '#/components/schemas/ErrorDetail'
       additionalProperties: false
-    CatalogDisclosure:
+    ModelPrice:
       type: object
       required:
-      - supplier_identity
-      - environment
-      - statement
+      - name
+      - kind
+      - tier
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - output_per_million_usd
       properties:
-        supplier_identity:
+        name:
           type: string
-          const: private
+        kind:
+          type: string
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+      additionalProperties: false
+    CatalogModel:
+      type: object
+      required:
+      - slug
+      - name
+      - kind
+      - environment
+      - tiers
+      - runtime
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
         environment:
           type: string
           enum:
           - sandbox
           - live
-        statement:
-          type: string
-      additionalProperties: false
-    ModelList:
-      type: object
-      required:
-      - object
-      - data
-      properties:
-        object:
-          type: string
-          const: list
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Model'
-      additionalProperties: false
-    CatalogTier:
-      type: object
-      required:
-      - selector
-      - available
-      - privacy_modes
-      - input_per_million_usd
-      - cached_input_per_million_usd
-      - cache_write_per_million_usd
-      - output_per_million_usd
-      - request_usd
-      - minimum_margin
-      - target_contribution_margin
-      - retry_budget
-      - price_version
-      properties:
-        selector:
-          type: string
-          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
-        available:
-          type: boolean
-          description: True only when this exact selector currently has public-callable capacity for the default standard privacy mode. Use the authenticated /v1/models list for actionable live selectors.
-        privacy_modes:
-          type: array
-          items:
-            type: string
-            enum:
-            - standard
-            - no-training
-            - zero-retention
-        input_per_million_usd:
-          type: number
-        cached_input_per_million_usd:
-          type: number
-        cache_write_per_million_usd:
-          type: number
-        output_per_million_usd:
-          type: number
-        request_usd:
-          type: number
-        minimum_margin:
-          type: number
-        target_contribution_margin:
-          type: number
-        retry_budget:
-          type: number
-        price_version:
-          type: string
-      additionalProperties: true
-    ErrorDetail:
-      type: object
-      required:
-      - code
-      - message
-      - request_id
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        request_id:
-          type:
-          - string
-          - 'null'
+        tiers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CatalogTier'
+        runtime:
+          $ref: '#/components/schemas/CatalogRuntime'
+      description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
       additionalProperties: true
   headers:
     RequestId:
@@ -345,20 +345,6 @@ components:
       schema:
         type: string
   responses:
-    RateLimited:
-      description: The request rate limit or an API-key spend ceiling was reached.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-        Retry-After:
-          description: Delay in seconds supplied for coarse request-rate limits.
-          schema:
-            type: integer
-            minimum: 0
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
     InternalError:
       description: Infer could not complete the operation.
       headers:
@@ -373,6 +359,20 @@ components:
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
       content:
         application/json:
           schema:

@@ -90,6 +90,84 @@ paths:
           $ref: '#/components/responses/Unavailable'
 components:
   schemas:
+    RelayRequestOptions:
+      type: object
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+        privacy:
+          type: string
+          enum:
+          - standard
+          - no-training
+          - zero-retention
+          default: standard
+        region:
+          type: string
+          minLength: 1
+          maxLength: 32
+      additionalProperties: false
+    ResponseInput:
+      oneOf:
+      - type: string
+        minLength: 1
+      - type: array
+        minItems: 1
+        items:
+          oneOf:
+          - type: string
+          - $ref: '#/components/schemas/ResponseInputItem'
+      description: Text or a list of Responses input items. The complete list must contain extractable text in a string or message content for Infer's admission check. Native Responses routes may also carry message, function_call, and function_call_output turn objects; those objects are not assumed portable through translated route protocols.
+      examples:
+      - - type: message
+          role: user
+          content:
+          - type: input_text
+            text: Check the repository state, then use the approved read-only tool.
+        - type: function_call
+          call_id: call_example
+          name: read_repository_state
+          arguments: '{}'
+        - type: function_call_output
+          call_id: call_example
+          output: No uncommitted changes.
+    ResponseEventStream:
+      type: string
+      description: 'SSE records using response.created, response output/content/function events, response.completed, and a final data: [DONE] sentinel.'
+    ResponseInputItem:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Responses item type, including message, function_call, or function_call_output.
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          - system
+          - developer
+        content:
+          oneOf:
+          - type: string
+            minLength: 1
+          - type: array
+            minItems: 1
+            items:
+              oneOf:
+              - type: string
+              - $ref: '#/components/schemas/InputTextPart'
+        call_id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: string
+        output: {}
+      description: Responses input item. Message content supplies extractable text; native tool-loop objects may omit content and use call_id, arguments, or output instead.
+      additionalProperties: true
     ResponseUsage:
       type: object
       required:
@@ -127,66 +205,6 @@ components:
           type: integer
           minimum: 0
       additionalProperties: true
-    ResponseEventStream:
-      type: string
-      description: 'SSE records using response.created, response output/content/function events, response.completed, and a final data: [DONE] sentinel.'
-    ResponseObject:
-      type: object
-      required:
-      - id
-      - object
-      - created_at
-      - status
-      - model
-      - output
-      - output_text
-      - usage
-      - relay
-      properties:
-        id:
-          type: string
-        object:
-          type: string
-          const: response
-        created_at:
-          type: integer
-        status:
-          type: string
-          const: completed
-        model:
-          type: string
-          description: The requested Infer selector. Read relay.resolved_model_class for the class that completed.
-        output:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-        output_text:
-          type: string
-        usage:
-          $ref: '#/components/schemas/ResponseUsage'
-        relay:
-          $ref: '#/components/schemas/RelayResponseMetadata'
-      additionalProperties: true
-    RelayRequestOptions:
-      type: object
-      properties:
-        session_id:
-          type: string
-          minLength: 1
-          maxLength: 200
-        privacy:
-          type: string
-          enum:
-          - standard
-          - no-training
-          - zero-retention
-          default: standard
-        region:
-          type: string
-          minLength: 1
-          maxLength: 32
-      additionalProperties: false
     ErrorDetail:
       type: object
       required:
@@ -202,21 +220,6 @@ components:
           type:
           - string
           - 'null'
-      additionalProperties: true
-    InputTextPart:
-      type: object
-      properties:
-        type:
-          type: string
-        text:
-          type: string
-        input_text:
-          type: string
-      anyOf:
-      - required:
-        - text
-      - required:
-        - input_text
       additionalProperties: true
     CreateResponseRequest:
       type: object
@@ -271,30 +274,59 @@ components:
           description: Optional client correlation value.
       description: Infer documents the stable fields it validates or uses for routing. Additional Responses fields may pass through on native Responses routes and should not be assumed portable across every route protocol.
       additionalProperties: true
-    ResponseInput:
-      oneOf:
-      - type: string
-        minLength: 1
-      - type: array
-        minItems: 1
-        items:
-          oneOf:
-          - type: string
-          - $ref: '#/components/schemas/ResponseInputItem'
-      description: Text or a list of Responses input items. The complete list must contain extractable text in a string or message content for Infer's admission check. Native Responses routes may also carry message, function_call, and function_call_output turn objects; those objects are not assumed portable through translated route protocols.
-      examples:
-      - - type: message
-          role: user
-          content:
-          - type: input_text
-            text: Check the repository state, then use the approved read-only tool.
-        - type: function_call
-          call_id: call_example
-          name: read_repository_state
-          arguments: '{}'
-        - type: function_call_output
-          call_id: call_example
-          output: No uncommitted changes.
+    ResponseObject:
+      type: object
+      required:
+      - id
+      - object
+      - created_at
+      - status
+      - model
+      - output
+      - output_text
+      - usage
+      - relay
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: response
+        created_at:
+          type: integer
+        status:
+          type: string
+          const: completed
+        model:
+          type: string
+          description: The requested Infer selector. Read relay.resolved_model_class for the class that completed.
+        output:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        output_text:
+          type: string
+        usage:
+          $ref: '#/components/schemas/ResponseUsage'
+        relay:
+          $ref: '#/components/schemas/RelayResponseMetadata'
+      additionalProperties: true
+    InputTextPart:
+      type: object
+      properties:
+        type:
+          type: string
+        text:
+          type: string
+        input_text:
+          type: string
+      anyOf:
+      - required:
+        - text
+      - required:
+        - input_text
+      additionalProperties: true
     ErrorEnvelope:
       type: object
       required:
@@ -348,41 +380,9 @@ components:
         idempotent_replay:
           type: boolean
       additionalProperties: true
-    ResponseInputItem:
-      type: object
-      properties:
-        type:
-          type: string
-          description: Responses item type, including message, function_call, or function_call_output.
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-          - system
-          - developer
-        content:
-          oneOf:
-          - type: string
-            minLength: 1
-          - type: array
-            minItems: 1
-            items:
-              oneOf:
-              - type: string
-              - $ref: '#/components/schemas/InputTextPart'
-        call_id:
-          type: string
-        name:
-          type: string
-        arguments:
-          type: string
-        output: {}
-      description: Responses input item. Message content supplies extractable text; native tool-loop objects may omit content and use call_id, arguments, or output instead.
-      additionalProperties: true
   responses:
-    InternalError:
-      description: Infer could not complete the operation.
+    Unavailable:
+      description: Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -390,26 +390,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    NotFound:
-      description: No active price exists for the requested selector in this environment.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    PayloadTooLarge:
-      description: The input or request body exceeds a configured limit.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Forbidden:
-      description: The key, organization, environment, or scope cannot perform this operation.
+    PaymentRequired:
+      description: The wallet cannot cover the request's reservation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -426,17 +408,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    Conflict:
-      description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Unavailable:
-      description: Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.
+    Forbidden:
+      description: The key, organization, environment, or scope cannot perform this operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -462,8 +435,35 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    PaymentRequired:
-      description: The wallet cannot cover the request's reservation.
+    PayloadTooLarge:
+      description: The input or request body exceeds a configured limit.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: No active price exists for the requested selector in this environment.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
