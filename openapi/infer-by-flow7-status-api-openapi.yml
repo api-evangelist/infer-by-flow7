@@ -44,6 +44,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   schemas:
     PublicServiceStatus:
       type: object
@@ -66,6 +71,14 @@ components:
           - 'null'
           minimum: 0
       additionalProperties: false
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
     ErrorDetail:
       type: object
       required:
@@ -82,14 +95,6 @@ components:
           - string
           - 'null'
       additionalProperties: true
-    ErrorEnvelope:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-      additionalProperties: false
     PublicStatus:
       type: object
       required:
@@ -123,21 +128,7 @@ components:
         note:
           type: string
       additionalProperties: false
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
   responses:
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
     RateLimited:
       description: The request rate limit or an API-key spend ceiling was reached.
       headers:
@@ -148,6 +139,15 @@ components:
           schema:
             type: integer
             minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
       content:
         application/json:
           schema:

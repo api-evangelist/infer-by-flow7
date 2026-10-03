@@ -82,88 +82,6 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   schemas:
-    ErrorDetail:
-      type: object
-      required:
-      - code
-      - message
-      - request_id
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        request_id:
-          type:
-          - string
-          - 'null'
-      additionalProperties: true
-    ModelList:
-      type: object
-      required:
-      - object
-      - data
-      properties:
-        object:
-          type: string
-          const: list
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Model'
-      additionalProperties: false
-    CatalogDisclosure:
-      type: object
-      required:
-      - supplier_identity
-      - environment
-      - statement
-      properties:
-        supplier_identity:
-          type: string
-          const: private
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        statement:
-          type: string
-      additionalProperties: false
-    PublicCatalog:
-      type: object
-      required:
-      - currency
-      - unit
-      - environment
-      - simulated
-      - live_available
-      - models
-      - disclosure
-      properties:
-        currency:
-          type: string
-          const: USD
-        unit:
-          type: string
-          const: per_million_tokens
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        live_available:
-          type: boolean
-          description: Whether live inference is enabled globally. This alone does not establish selector callability.
-        models:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogModel'
-        disclosure:
-          $ref: '#/components/schemas/CatalogDisclosure'
-      additionalProperties: false
     CatalogTier:
       type: object
       required:
@@ -254,61 +172,23 @@ components:
         responses_api:
           type: boolean
       additionalProperties: false
-    Model:
+    CatalogDisclosure:
       type: object
       required:
-      - id
-      - object
-      - owned_by
-      - relay
+      - supplier_identity
+      - environment
+      - statement
       properties:
-        id:
+        supplier_identity:
           type: string
-          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
-        object:
-          type: string
-          const: model
-        owned_by:
-          type: string
-          const: infer
-        relay:
-          $ref: '#/components/schemas/ModelPrice'
-      additionalProperties: false
-    ErrorEnvelope:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-      additionalProperties: false
-    ModelPrice:
-      type: object
-      required:
-      - name
-      - kind
-      - tier
-      - input_per_million_usd
-      - cached_input_per_million_usd
-      - output_per_million_usd
-      properties:
-        name:
-          type: string
-        kind:
-          type: string
-        tier:
+          const: private
+        environment:
           type: string
           enum:
-          - economy
-          - balanced
-          - priority
-          - official
-        input_per_million_usd:
-          type: number
-        cached_input_per_million_usd:
-          type: number
-        output_per_million_usd:
-          type: number
+          - sandbox
+          - live
+        statement:
+          type: string
       additionalProperties: false
     CatalogModel:
       type: object
@@ -339,14 +219,129 @@ components:
           $ref: '#/components/schemas/CatalogRuntime'
       description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
       additionalProperties: true
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
+    PublicCatalog:
+      type: object
+      required:
+      - currency
+      - unit
+      - environment
+      - simulated
+      - live_available
+      - models
+      - disclosure
+      properties:
+        currency:
+          type: string
+          const: USD
+        unit:
+          type: string
+          const: per_million_tokens
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        live_available:
+          type: boolean
+          description: Whether live inference is enabled globally. This alone does not establish selector callability.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogModel'
+        disclosure:
+          $ref: '#/components/schemas/CatalogDisclosure'
+      additionalProperties: false
+    ModelPrice:
+      type: object
+      required:
+      - name
+      - kind
+      - tier
+      - input_per_million_usd
+      - cached_input_per_million_usd
+      - output_per_million_usd
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        input_per_million_usd:
+          type: number
+        cached_input_per_million_usd:
+          type: number
+        output_per_million_usd:
+          type: number
+      additionalProperties: false
+    ErrorDetail:
+      type: object
+      required:
+      - code
+      - message
+      - request_id
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type:
+          - string
+          - 'null'
+      additionalProperties: true
+    ModelList:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+      additionalProperties: false
+    Model:
+      type: object
+      required:
+      - id
+      - object
+      - owned_by
+      - relay
+      properties:
+        id:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        object:
+          type: string
+          const: model
+        owned_by:
+          type: string
+          const: infer
+        relay:
+          $ref: '#/components/schemas/ModelPrice'
+      additionalProperties: false
   responses:
-    InternalError:
-      description: Infer could not complete the operation.
+    Forbidden:
+      description: The key, organization, environment, or scope cannot perform this operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -377,8 +372,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-    Forbidden:
-      description: The key, organization, environment, or scope cannot perform this operation.
+    InternalError:
+      description: Infer could not complete the operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -386,6 +381,11 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http
