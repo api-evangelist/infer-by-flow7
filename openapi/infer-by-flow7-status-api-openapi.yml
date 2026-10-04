@@ -44,12 +44,69 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
+  responses:
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   headers:
     RequestId:
       description: Request correlation identifier generated or safely accepted by Infer.
       schema:
         type: string
   schemas:
+    PublicStatus:
+      type: object
+      required:
+      - environment
+      - simulated
+      - updated_at
+      - status
+      - services
+      - note
+      properties:
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        simulated:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - operational
+          - partial_outage
+          - unavailable
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicServiceStatus'
+        note:
+          type: string
+      additionalProperties: false
     PublicServiceStatus:
       type: object
       required:
@@ -95,63 +152,6 @@ components:
           - string
           - 'null'
       additionalProperties: true
-    PublicStatus:
-      type: object
-      required:
-      - environment
-      - simulated
-      - updated_at
-      - status
-      - services
-      - note
-      properties:
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        updated_at:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum:
-          - operational
-          - partial_outage
-          - unavailable
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicServiceStatus'
-        note:
-          type: string
-      additionalProperties: false
-  responses:
-    RateLimited:
-      description: The request rate limit or an API-key spend ceiling was reached.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-        Retry-After:
-          description: Delay in seconds supplied for coarse request-rate limits.
-          schema:
-            type: integer
-            minimum: 0
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
   securitySchemes:
     bearerAuth:
       type: http
