@@ -195,6 +195,10 @@ generated:
   confidence: 97
   at: '2026-08-11T12:17:03.986Z'
 common:
+- type: Plans
+  url: plans/infer-by-flow7-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/infer-by-flow7-rate-limits.yml
 - type: CapabilityMap
   url: capabilities/infer-by-flow7-capability-edges.yml
   name: Infer by Flow7 Business Capability Map
