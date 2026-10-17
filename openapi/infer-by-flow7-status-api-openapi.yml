@@ -44,35 +44,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
-  responses:
-    RateLimited:
-      description: The request rate limit or an API-key spend ceiling was reached.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-        Retry-After:
-          description: Delay in seconds supplied for coarse request-rate limits.
-          schema:
-            type: integer
-            minimum: 0
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
   schemas:
     PublicStatus:
       type: object
@@ -107,6 +78,30 @@ components:
         note:
           type: string
       additionalProperties: false
+    ErrorDetail:
+      type: object
+      required:
+      - code
+      - message
+      - request_id
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type:
+          - string
+          - 'null'
+      additionalProperties: true
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
     PublicServiceStatus:
       type: object
       required:
@@ -128,30 +123,35 @@ components:
           - 'null'
           minimum: 0
       additionalProperties: false
-    ErrorEnvelope:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-      additionalProperties: false
-    ErrorDetail:
-      type: object
-      required:
-      - code
-      - message
-      - request_id
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        request_id:
-          type:
-          - string
-          - 'null'
-      additionalProperties: true
+  responses:
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http

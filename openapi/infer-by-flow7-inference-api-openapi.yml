@@ -89,161 +89,51 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
 components:
-  responses:
-    BadRequest:
-      description: The request could not be processed.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    UnprocessableEntity:
-      description: A selector, input, output limit, session identifier, or routing option is invalid.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Conflict:
-      description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    PayloadTooLarge:
-      description: The input or request body exceeds a configured limit.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    NotFound:
-      description: No active price exists for the requested selector in this environment.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Forbidden:
-      description: The key, organization, environment, or scope cannot perform this operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    PaymentRequired:
-      description: The wallet cannot cover the request's reservation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    RateLimited:
-      description: The request rate limit or an API-key spend ceiling was reached.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-        Retry-After:
-          description: Delay in seconds supplied for coarse request-rate limits.
-          schema:
-            type: integer
-            minimum: 0
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Unavailable:
-      description: Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Unauthorized:
-      description: A valid Bearer API key is required.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
   schemas:
-    RelayRequestOptions:
-      type: object
-      properties:
-        session_id:
-          type: string
-          minLength: 1
-          maxLength: 200
-        privacy:
-          type: string
-          enum:
-          - standard
-          - no-training
-          - zero-retention
-          default: standard
-        region:
-          type: string
-          minLength: 1
-          maxLength: 32
-      additionalProperties: false
-    InputTextPart:
-      type: object
-      properties:
-        type:
-          type: string
-        text:
-          type: string
-        input_text:
-          type: string
-      anyOf:
-      - required:
-        - text
-      - required:
-        - input_text
-      additionalProperties: true
-    ErrorDetail:
+    RelayResponseMetadata:
       type: object
       required:
-      - code
-      - message
-      - request_id
+      - receipt_id
+      - price_version
+      - tier
+      - resolved_model_class
+      - cache_status
+      - environment
+      - provider_disclosed
+      - customer_cost_usd
       properties:
-        code:
+        receipt_id:
           type: string
-        message:
+        price_version:
           type: string
-        request_id:
-          type:
-          - string
-          - 'null'
+        tier:
+          type: string
+          enum:
+          - economy
+          - balanced
+          - priority
+          - official
+        resolved_model_class:
+          type: string
+        cache_status:
+          type: string
+          enum:
+          - hit
+          - partial
+          - miss
+        environment:
+          type: string
+          enum:
+          - sandbox
+          - live
+        provider_disclosed:
+          type: boolean
+          const: false
+        customer_cost_usd:
+          type: number
+          minimum: 0
+        idempotent_replay:
+          type: boolean
       additionalProperties: true
     ResponseInput:
       oneOf:
@@ -269,44 +159,65 @@ components:
         - type: function_call_output
           call_id: call_example
           output: No uncommitted changes.
-    ResponseObject:
+    ErrorDetail:
       type: object
       required:
-      - id
-      - object
-      - created_at
-      - status
-      - model
-      - output
-      - output_text
-      - usage
-      - relay
+      - code
+      - message
+      - request_id
       properties:
-        id:
+        code:
           type: string
-        object:
+        message:
           type: string
-          const: response
-        created_at:
-          type: integer
-        status:
-          type: string
-          const: completed
-        model:
-          type: string
-          description: The requested Infer selector. Read relay.resolved_model_class for the class that completed.
-        output:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-        output_text:
-          type: string
-        usage:
-          $ref: '#/components/schemas/ResponseUsage'
-        relay:
-          $ref: '#/components/schemas/RelayResponseMetadata'
+        request_id:
+          type:
+          - string
+          - 'null'
       additionalProperties: true
+    ResponseInputItem:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Responses item type, including message, function_call, or function_call_output.
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+          - system
+          - developer
+        content:
+          oneOf:
+          - type: string
+            minLength: 1
+          - type: array
+            minItems: 1
+            items:
+              oneOf:
+              - type: string
+              - $ref: '#/components/schemas/InputTextPart'
+        call_id:
+          type: string
+        name:
+          type: string
+        arguments:
+          type: string
+        output: {}
+      description: Responses input item. Message content supplies extractable text; native tool-loop objects may omit content and use call_id, arguments, or output instead.
+      additionalProperties: true
+    ResponseEventStream:
+      type: string
+      description: 'SSE records using response.created, response output/content/function events, response.completed, and a final data: [DONE] sentinel.'
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
     CreateResponseRequest:
       type: object
       required:
@@ -360,86 +271,6 @@ components:
           description: Optional client correlation value.
       description: Infer documents the stable fields it validates or uses for routing. Additional Responses fields may pass through on native Responses routes and should not be assumed portable across every route protocol.
       additionalProperties: true
-    RelayResponseMetadata:
-      type: object
-      required:
-      - receipt_id
-      - price_version
-      - tier
-      - resolved_model_class
-      - cache_status
-      - environment
-      - provider_disclosed
-      - customer_cost_usd
-      properties:
-        receipt_id:
-          type: string
-        price_version:
-          type: string
-        tier:
-          type: string
-          enum:
-          - economy
-          - balanced
-          - priority
-          - official
-        resolved_model_class:
-          type: string
-        cache_status:
-          type: string
-          enum:
-          - hit
-          - partial
-          - miss
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        provider_disclosed:
-          type: boolean
-          const: false
-        customer_cost_usd:
-          type: number
-          minimum: 0
-        idempotent_replay:
-          type: boolean
-      additionalProperties: true
-    ResponseEventStream:
-      type: string
-      description: 'SSE records using response.created, response output/content/function events, response.completed, and a final data: [DONE] sentinel.'
-    ResponseInputItem:
-      type: object
-      properties:
-        type:
-          type: string
-          description: Responses item type, including message, function_call, or function_call_output.
-        role:
-          type: string
-          enum:
-          - user
-          - assistant
-          - system
-          - developer
-        content:
-          oneOf:
-          - type: string
-            minLength: 1
-          - type: array
-            minItems: 1
-            items:
-              oneOf:
-              - type: string
-              - $ref: '#/components/schemas/InputTextPart'
-        call_id:
-          type: string
-        name:
-          type: string
-        arguments:
-          type: string
-        output: {}
-      description: Responses input item. Message content supplies extractable text; native tool-loop objects may omit content and use call_id, arguments, or output instead.
-      additionalProperties: true
     ResponseUsage:
       type: object
       required:
@@ -477,14 +308,183 @@ components:
           type: integer
           minimum: 0
       additionalProperties: true
-    ErrorEnvelope:
+    InputTextPart:
+      type: object
+      properties:
+        type:
+          type: string
+        text:
+          type: string
+        input_text:
+          type: string
+      anyOf:
+      - required:
+        - text
+      - required:
+        - input_text
+      additionalProperties: true
+    RelayRequestOptions:
+      type: object
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+        privacy:
+          type: string
+          enum:
+          - standard
+          - no-training
+          - zero-retention
+          default: standard
+        region:
+          type: string
+          minLength: 1
+          maxLength: 32
+      additionalProperties: false
+    ResponseObject:
       type: object
       required:
-      - error
+      - id
+      - object
+      - created_at
+      - status
+      - model
+      - output
+      - output_text
+      - usage
+      - relay
       properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
-      additionalProperties: false
+        id:
+          type: string
+        object:
+          type: string
+          const: response
+        created_at:
+          type: integer
+        status:
+          type: string
+          const: completed
+        model:
+          type: string
+          description: The requested Infer selector. Read relay.resolved_model_class for the class that completed.
+        output:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        output_text:
+          type: string
+        usage:
+          $ref: '#/components/schemas/ResponseUsage'
+        relay:
+          $ref: '#/components/schemas/RelayResponseMetadata'
+      additionalProperties: true
+  responses:
+    Unavailable:
+      description: Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: The key, organization, environment, or scope cannot perform this operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    BadRequest:
+      description: The request could not be processed.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: No active price exists for the requested selector in this environment.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: A valid Bearer API key is required.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: The request rate limit or an API-key spend ceiling was reached.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          description: Delay in seconds supplied for coarse request-rate limits.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: The idempotency key is in progress, expired, or otherwise cannot be replayed.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    PaymentRequired:
+      description: The wallet cannot cover the request's reservation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    PayloadTooLarge:
+      description: The input or request body exceeds a configured limit.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    UnprocessableEntity:
+      description: A selector, input, output limit, session identifier, or routing option is invalid.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   headers:
     RequestId:
       description: Request correlation identifier generated or safely accepted by Infer.
