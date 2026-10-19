@@ -1,19 +1,29 @@
 openapi: 3.2.0
 info:
   title: Infer by Flow7 Public Status API
-  summary: Authenticated Responses inference plus public catalog and route-status metadata.
-  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources.'
+  summary: Authenticated Responses, Chat Completions, and Anthropic Messages inference plus public catalog/status metadata.
+  description: 'This description covers Infer''s public paid integration surface: authenticated Responses, OpenAI Chat Completions, Anthropic Messages, the authenticated model/receipt APIs, and unauthenticated catalog/status resources. All inference skins share one routing, wallet, cache, media, privacy, and receipt engine. Public registration creates an account; the account email must be verified, the wallet must be funded, and a scoped API key must be created before metered inference. Route availability is dynamic, so read the public status resource immediately before use. Infer does not attest an upstream provider identity.'
   termsOfService: https://infer.flow7.org/terms
   contact:
     name: Infer by Flow7 support
     url: https://infer.flow7.org/support
-  version: 0.4.0
+  version: 0.9.0
   x-infer-access:
-    mode: public-paid-beta
+    mode: public-paid
     url: https://infer.flow7.org/signup
-    automaticWorkspaceCreation: true
+    automaticAccountProvisioning: true
     emailVerificationRequired: true
     fundingRequiredForLiveInference: true
+  x-infer-streaming:
+    mode: live-incremental
+    providerDeltasForwarded: true
+    reasoningDeltas: true
+    toolArgumentDeltas: true
+    heartbeatSeconds: 15
+    inferTotalGenerationDeadline: null
+    finalSettlementMetadata: true
+    clientDisconnectCancelsUpstream: true
+    clientDisconnectCharge: generated_usage_up_to_reservation
 servers:
 - url: https://infer.flow7.org
   description: Infer's production origin. Read /api/public/status for current route availability.
@@ -26,7 +36,7 @@ paths:
       tags:
       - Status
       summary: Read customer-facing route status
-      description: Returns an overall state and one state per published service. The simulated field distinguishes sandbox health from live service health. Private route counts, failure domains, and provider identities are not returned.
+      description: Returns an overall state and one state per published service. The simulated field is retained for schema compatibility and is false on the public live service. Private route counts, failure domains, and provider identities are not returned.
       operationId: getPublicStatus
       security: []
       responses:
@@ -44,40 +54,12 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 components:
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   schemas:
-    PublicStatus:
-      type: object
-      required:
-      - environment
-      - simulated
-      - updated_at
-      - status
-      - services
-      - note
-      properties:
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        updated_at:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum:
-          - operational
-          - partial_outage
-          - unavailable
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicServiceStatus'
-        note:
-          type: string
-      additionalProperties: false
     ErrorDetail:
       type: object
       required:
@@ -94,6 +76,43 @@ components:
           - string
           - 'null'
       additionalProperties: true
+    PublicStatus:
+      type: object
+      required:
+      - environment
+      - simulated
+      - updated_at
+      - status
+      - services
+      - note
+      properties:
+        environment:
+          type: string
+          enum:
+          - live
+        simulated:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - operational
+          - unavailable
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicServiceStatus'
+        note:
+          type: string
+        evidence_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Oldest route-health evidence timestamp supporting the current service-status response.
+      additionalProperties: false
     ErrorEnvelope:
       type: object
       required:
@@ -122,6 +141,13 @@ components:
           - integer
           - 'null'
           minimum: 0
+          description: Conservative observed p95 latency for the published model family across its currently published tiers.
+        evidence_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Oldest route-health evidence timestamp supporting this model-family status.
       additionalProperties: false
   responses:
     InternalError:
@@ -147,17 +173,17 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: Infer API key
-      description: Workspace API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+      description: Infer API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+    anthropicApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Infer API key accepted on the Anthropic Messages compatibility endpoint. Bearer authentication is also supported.
 externalDocs:
   description: Human-readable Infer API documentation
   url: https://infer.flow7.org/docs

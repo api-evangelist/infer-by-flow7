@@ -1,0 +1,351 @@
+openapi: 3.2.0
+info:
+  title: Infer by Flow7 Public Chat API
+  summary: Authenticated Responses, Chat Completions, and Anthropic Messages inference plus public catalog/status metadata.
+  description: 'This description covers Infer''s public paid integration surface: authenticated Responses, OpenAI Chat Completions, Anthropic Messages, the authenticated model/receipt APIs, and unauthenticated catalog/status resources. All inference skins share one routing, wallet, cache, media, privacy, and receipt engine. Public registration creates an account; the account email must be verified, the wallet must be funded, and a scoped API key must be created before metered inference. Route availability is dynamic, so read the public status resource immediately before use. Infer does not attest an upstream provider identity.'
+  termsOfService: https://infer.flow7.org/terms
+  contact:
+    name: Infer by Flow7 support
+    url: https://infer.flow7.org/support
+  version: 0.9.0
+  x-infer-access:
+    mode: public-paid
+    url: https://infer.flow7.org/signup
+    automaticAccountProvisioning: true
+    emailVerificationRequired: true
+    fundingRequiredForLiveInference: true
+  x-infer-streaming:
+    mode: live-incremental
+    providerDeltasForwarded: true
+    reasoningDeltas: true
+    toolArgumentDeltas: true
+    heartbeatSeconds: 15
+    inferTotalGenerationDeadline: null
+    finalSettlementMetadata: true
+    clientDisconnectCancelsUpstream: true
+    clientDisconnectCharge: generated_usage_up_to_reservation
+servers:
+- url: https://infer.flow7.org
+  description: Infer's production origin. Read /api/public/status for current route availability.
+tags:
+- name: Chat Completions
+paths:
+  /v1/chat/completions:
+    post:
+      operationId: createChatCompletion
+      summary: Create a chat completion
+      description: OpenAI Chat Completions-compatible skin over the same Infer routing, wallet, privacy, cache, media, tool, and receipt engine used by /v1/responses. With stream=true, chat.completion.chunk events carry upstream reasoning, text, and tool-call argument deltas as they arrive; the final finish chunk includes relay receipt metadata and stream_options.include_usage adds the settled usage chunk. Infer emits keepalive comments during quiet periods and does not impose a generation wall-clock timeout while the connection remains alive.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+        description: Optional Infer idempotency key. A one-use key is generated when omitted.
+      - name: X-Session-Affinity
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+        description: Optional Infer session-affinity/cache-routing extension.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+      responses:
+        '200':
+          description: Chat completion or SSE stream
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionEventStream'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '401':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '403':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '413':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '422':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '429':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+        '503':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAICompatErrorEnvelope'
+      tags:
+      - Chat Completions
+components:
+  schemas:
+    ChatMessage:
+      type: object
+      required:
+      - role
+      properties:
+        role:
+          type: string
+          enum:
+          - system
+          - developer
+          - user
+          - assistant
+          - tool
+          - function
+        content: {}
+        name:
+          type: string
+        tool_call_id:
+          type: string
+        tool_calls:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        function_call:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+      description: OpenAI-compatible chat message. Text, image_url, input_audio, file, and video_url content parts are normalized into the Infer canonical request.
+    OpenAICompatErrorEnvelope:
+      type: object
+      required:
+      - error
+      - request_id
+      properties:
+        error:
+          type: object
+          required:
+          - message
+          - type
+          - param
+          - code
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          additionalProperties: false
+        request_id:
+          type: string
+      additionalProperties: false
+    RelayResponseMetadata:
+      type: object
+      required:
+      - receipt_id
+      - price_version
+      - tier
+      - resolved_model_class
+      - cache_status
+      - environment
+      - provider_disclosed
+      - customer_cost_usd
+      properties:
+        receipt_id:
+          type: string
+        price_version:
+          type: string
+          description: Opaque reference (pv_…) to the immutable price version that priced this request. It matches the catalog option and the usage receipt and reveals no supplier or cost information.
+        tier:
+          type: string
+          enum:
+          - low-cost
+          - balanced
+          - stable
+          - official
+        resolved_model_class:
+          type: string
+        cache_status:
+          type: string
+          enum:
+          - hit
+          - partial
+          - miss
+        environment:
+          type: string
+          enum:
+          - live
+        provider_disclosed:
+          type: boolean
+          const: false
+        customer_cost_usd:
+          type: number
+          minimum: 0
+        idempotent_replay:
+          type: boolean
+      additionalProperties: true
+    RelayRequestOptions:
+      type: object
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+        privacy:
+          type: string
+          enum:
+          - standard
+          - no-training
+          - zero-retention
+          default: standard
+      additionalProperties: false
+    ChatCompletionResponse:
+      type: object
+      required:
+      - id
+      - object
+      - created
+      - model
+      - choices
+      - usage
+      - relay
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          const: chat.completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        usage:
+          type: object
+          additionalProperties: true
+        relay:
+          $ref: '#/components/schemas/RelayResponseMetadata'
+      additionalProperties: true
+    ChatCompletionRequest:
+      type: object
+      required:
+      - model
+      - messages
+      properties:
+        model:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        max_completion_tokens:
+          type: integer
+          minimum: 1
+          description: Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap.
+        max_tokens:
+          type: integer
+          minimum: 1
+          deprecated: true
+          description: Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap.
+        stream:
+          type: boolean
+          default: false
+        stream_options:
+          type: object
+          additionalProperties: true
+        temperature:
+          type: number
+        top_p:
+          type: number
+        presence_penalty:
+          type: number
+        frequency_penalty:
+          type: number
+        seed:
+          type: integer
+        stop: {}
+        tools:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        tool_choice: {}
+        parallel_tool_calls:
+          type: boolean
+        response_format:
+          type: object
+          additionalProperties: true
+        store:
+          type: boolean
+        prompt_cache_key:
+          type: string
+        cache_control:
+          type: object
+          additionalProperties: true
+        relay:
+          $ref: '#/components/schemas/RelayRequestOptions'
+      additionalProperties: true
+      description: OpenAI Chat Completions compatibility request. Infer normalizes this into the same canonical request used by /v1/responses; n values other than 1, audio output, prediction, web_search_options, and returned logprobs are not currently supported.
+    ChatCompletionEventStream:
+      type: string
+      description: 'Live incremental OpenAI-compatible chat.completion.chunk SSE ending with data: [DONE]. Text, reasoning extensions, and tool-call arguments are forwarded as upstream deltas arrive; keepalive comments preserve quiet long-reasoning connections; final usage and relay receipt metadata are emitted only after wallet settlement.'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Infer API key
+      description: Infer API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+    anthropicApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Infer API key accepted on the Anthropic Messages compatibility endpoint. Bearer authentication is also supported.
+externalDocs:
+  description: Human-readable Infer API documentation
+  url: https://infer.flow7.org/docs

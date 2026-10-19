@@ -1,19 +1,29 @@
 openapi: 3.2.0
 info:
   title: Infer by Flow7 Public Catalog API
-  summary: Authenticated Responses inference plus public catalog and route-status metadata.
-  description: 'This description covers Infer''s public paid-beta integration surface: the authenticated Responses endpoint and model list, plus the unauthenticated catalog and status resources.'
+  summary: Authenticated Responses, Chat Completions, and Anthropic Messages inference plus public catalog/status metadata.
+  description: 'This description covers Infer''s public paid integration surface: authenticated Responses, OpenAI Chat Completions, Anthropic Messages, the authenticated model/receipt APIs, and unauthenticated catalog/status resources. All inference skins share one routing, wallet, cache, media, privacy, and receipt engine. Public registration creates an account; the account email must be verified, the wallet must be funded, and a scoped API key must be created before metered inference. Route availability is dynamic, so read the public status resource immediately before use. Infer does not attest an upstream provider identity.'
   termsOfService: https://infer.flow7.org/terms
   contact:
     name: Infer by Flow7 support
     url: https://infer.flow7.org/support
-  version: 0.4.0
+  version: 0.9.0
   x-infer-access:
-    mode: public-paid-beta
+    mode: public-paid
     url: https://infer.flow7.org/signup
-    automaticWorkspaceCreation: true
+    automaticAccountProvisioning: true
     emailVerificationRequired: true
     fundingRequiredForLiveInference: true
+  x-infer-streaming:
+    mode: live-incremental
+    providerDeltasForwarded: true
+    reasoningDeltas: true
+    toolArgumentDeltas: true
+    heartbeatSeconds: 15
+    inferTotalGenerationDeadline: null
+    finalSettlementMetadata: true
+    clientDisconnectCancelsUpstream: true
+    clientDisconnectCharge: generated_usage_up_to_reservation
 servers:
 - url: https://infer.flow7.org
   description: Infer's production origin. Read /api/public/status for current route availability.
@@ -26,18 +36,17 @@ paths:
       tags:
       - Catalog
       summary: Read the published model and price catalog
-      description: Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields. A catalog row or published price is not proof that its selector is callable. The response's environment and runtime fields are authoritative. Requesting the live environment falls back to sandbox while live inference is disabled. Private routing topology is excluded.
+      description: Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields. A catalog row or published price is not proof that its selector is callable. The response's environment and runtime fields are authoritative. Requests use the live environment; unavailable live routes fail closed. Private routing topology is excluded.
       operationId: getPublicCatalog
       security: []
       parameters:
       - name: environment
         in: query
         required: false
-        description: Requested catalog environment. The response environment may be sandbox when live inference is disabled.
+        description: Requested catalog environment. The response environment is live.
         schema:
           type: string
           enum:
-          - sandbox
           - live
       responses:
         '200':
@@ -57,14 +66,14 @@ paths:
     get:
       tags:
       - Catalog
-      summary: List selectors for an API key's environment
-      description: Returns selectors for the authenticated API key's environment. For live keys, every returned selector has current public-callable capacity for its exact price option at response time; availability can change, so consult public status immediately before use. Sandbox keys list active test prices. The key must carry the inference:write scope.
+      summary: List live selectors for an API key
+      description: Returns selectors for the authenticated API key. Every returned selector has current public-callable capacity for its exact price option at response time; availability can change, so consult public status immediately before use. The key must carry the inference:write scope.
       operationId: listModels
       security:
       - bearerAuth: []
       responses:
         '200':
-          description: Currently callable live selectors, or active sandbox selectors, for the key's environment.
+          description: Currently callable live selectors for the authenticated API key.
           headers:
             X-Request-ID:
               $ref: '#/components/headers/RequestId'
@@ -82,22 +91,6 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   schemas:
-    ErrorDetail:
-      type: object
-      required:
-      - code
-      - message
-      - request_id
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        request_id:
-          type:
-          - string
-          - 'null'
-      additionalProperties: true
     ModelPrice:
       type: object
       required:
@@ -115,9 +108,9 @@ components:
         tier:
           type: string
           enum:
-          - economy
+          - low-cost
           - balanced
-          - priority
+          - stable
           - official
         input_per_million_usd:
           type: number
@@ -125,95 +118,8 @@ components:
           type: number
         output_per_million_usd:
           type: number
-      additionalProperties: false
-    CatalogRuntime:
-      type: object
-      required:
-      - status
-      - p95_latency_ms
-      - max_context_tokens
-      - max_output_tokens
-      - tools
-      - structured_outputs
-      - vision
-      - streaming
-      - responses_api
-      properties:
-        status:
-          type: string
-          enum:
-          - operational
-          - unavailable
-        p95_latency_ms:
-          type:
-          - integer
-          - 'null'
-        max_context_tokens:
-          type:
-          - integer
-          - 'null'
-        max_output_tokens:
-          type:
-          - integer
-          - 'null'
-        tools:
-          type: boolean
-        structured_outputs:
-          type: boolean
-        vision:
-          type: boolean
-        streaming:
-          type: boolean
-        responses_api:
-          type: boolean
-      additionalProperties: false
-    PublicCatalog:
-      type: object
-      required:
-      - currency
-      - unit
-      - environment
-      - simulated
-      - live_available
-      - models
-      - disclosure
-      properties:
-        currency:
-          type: string
-          const: USD
-        unit:
-          type: string
-          const: per_million_tokens
-        environment:
-          type: string
-          enum:
-          - sandbox
-          - live
-        simulated:
-          type: boolean
-        live_available:
-          type: boolean
-          description: Whether live inference is enabled globally. This alone does not establish selector callability.
-        models:
-          type: array
-          items:
-            $ref: '#/components/schemas/CatalogModel'
-        disclosure:
-          $ref: '#/components/schemas/CatalogDisclosure'
-      additionalProperties: false
-    ModelList:
-      type: object
-      required:
-      - object
-      - data
-      properties:
-        object:
-          type: string
-          const: list
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Model'
+        generation:
+          $ref: '#/components/schemas/GenerationPricing'
       additionalProperties: false
     Model:
       type: object
@@ -235,35 +141,69 @@ components:
         relay:
           $ref: '#/components/schemas/ModelPrice'
       additionalProperties: false
-    CatalogDisclosure:
+    ErrorDetail:
       type: object
       required:
-      - supplier_identity
-      - environment
-      - statement
+      - code
+      - message
+      - request_id
       properties:
-        supplier_identity:
+        code:
           type: string
-          const: private
+        message:
+          type: string
+        request_id:
+          type:
+          - string
+          - 'null'
+      additionalProperties: true
+    PublicCatalog:
+      type: object
+      required:
+      - currency
+      - unit
+      - environment
+      - simulated
+      - live_available
+      - models
+      - disclosure
+      properties:
+        currency:
+          type: string
+          const: USD
+        unit:
+          type: string
+          const: per_million_tokens
         environment:
           type: string
           enum:
-          - sandbox
           - live
-        statement:
+        simulated:
+          type: boolean
+        live_available:
+          type: boolean
+          description: Whether live inference is enabled globally. This alone does not establish selector callability.
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogModel'
+        disclosure:
+          $ref: '#/components/schemas/CatalogDisclosure'
+        updated_at:
           type: string
-      additionalProperties: false
-    ErrorEnvelope:
-      type: object
-      required:
-      - error
-      properties:
-        error:
-          $ref: '#/components/schemas/ErrorDetail'
+          format: date-time
+          description: Time Infer generated this catalog response and evaluated current callability.
+        evidence_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Oldest route-health evidence timestamp among currently published callable model families.
       additionalProperties: false
     CatalogTier:
       type: object
       required:
+      - tier
       - selector
       - available
       - privacy_modes
@@ -272,11 +212,17 @@ components:
       - cache_write_per_million_usd
       - output_per_million_usd
       - request_usd
-      - minimum_margin
-      - target_contribution_margin
-      - retry_budget
+      - image_input_usd
       - price_version
       properties:
+        tier:
+          type: string
+          enum:
+          - low-cost
+          - balanced
+          - stable
+          - official
+          description: Canonical customer-facing Infer service policy.
         selector:
           type: string
           pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
@@ -297,19 +243,156 @@ components:
           type: number
         cache_write_per_million_usd:
           type: number
+          description: Customer price per million input tokens written into a provider prompt cache when the selected route reports cache-write usage.
         output_per_million_usd:
           type: number
         request_usd:
           type: number
-        minimum_margin:
-          type: number
-        target_contribution_margin:
-          type: number
-        retry_budget:
-          type: number
         price_version:
           type: string
+          description: Opaque reference (pv_…) to the immutable price version currently published for this option. Response metadata and usage receipts carry the same reference for requests charged at these rates. It identifies the rate record only and reveals no supplier or cost information.
+        runtime:
+          $ref: '#/components/schemas/CatalogRuntime'
+        image_input_usd:
+          type: number
+          minimum: 0
+          description: Per-image input charge when the selected price record has a separate image-input fee. Token-priced image processing may also appear in input usage.
+        generation:
+          $ref: '#/components/schemas/GenerationPricing'
       additionalProperties: true
+    CatalogDisclosure:
+      type: object
+      required:
+      - supplier_identity
+      - environment
+      - statement
+      properties:
+        supplier_identity:
+          type: string
+          const: private
+        environment:
+          type: string
+          enum:
+          - live
+        statement:
+          type: string
+      additionalProperties: false
+    ModelList:
+      type: object
+      required:
+      - object
+      - data
+      properties:
+        object:
+          type: string
+          const: list
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+      additionalProperties: false
+    CatalogRuntime:
+      type: object
+      required:
+      - status
+      - p95_latency_ms
+      - max_context_tokens
+      - max_output_tokens
+      - max_input_characters
+      - tools
+      - structured_outputs
+      - vision
+      - streaming
+      - responses_api
+      - files
+      - audio
+      - video
+      - image_generation
+      - video_generation
+      properties:
+        status:
+          type: string
+          enum:
+          - operational
+          - unavailable
+        p95_latency_ms:
+          type:
+          - integer
+          - 'null'
+          description: Observed p95 latency for the selected tier; model-level runtime uses the conservative maximum across currently published tiers.
+        max_context_tokens:
+          type:
+          - integer
+          - 'null'
+        max_output_tokens:
+          type:
+          - integer
+          - 'null'
+        max_input_characters:
+          type: integer
+          minimum: 1
+          description: Infer's platform input-text character ceiling for this deployment.
+        tools:
+          type: boolean
+        structured_outputs:
+          type: boolean
+        vision:
+          type: boolean
+          description: Native image input support through the selected Responses route.
+        streaming:
+          type: boolean
+        responses_api:
+          type: boolean
+        files:
+          type: boolean
+          description: Native file/PDF input support through the selected Responses route.
+        audio:
+          type: boolean
+          description: Native audio input support through the selected Responses route.
+        video:
+          type: boolean
+          description: Native video input support through the selected Responses route.
+        health_evidence_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Oldest route-health evidence timestamp among routes supporting this runtime profile.
+        image_generation:
+          type: boolean
+          description: Native image-generation support through /v1/images/generations and JSON URL-based /v1/images/edits.
+        video_generation:
+          type: boolean
+          description: Native asynchronous video-generation support through /v1/videos.
+      additionalProperties: false
+    ErrorEnvelope:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      additionalProperties: false
+    GenerationPricing:
+      type:
+      - object
+      - 'null'
+      required:
+      - unit
+      - prices
+      properties:
+        unit:
+          type: string
+          enum:
+          - generated_image
+          - generated_second
+        prices:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+          description: Customer USD price by generation variant. Image keys use quality:size; video keys use resolution and are per generated second.
+      additionalProperties: false
     CatalogModel:
       type: object
       required:
@@ -329,37 +412,33 @@ components:
         environment:
           type: string
           enum:
-          - sandbox
           - live
         tiers:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CatalogTier'
+          description: 'Map keyed only by the canonical Infer service policies: low-cost, balanced, stable, and official.'
         runtime:
           $ref: '#/components/schemas/CatalogRuntime'
       description: Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.
       additionalProperties: true
+  headers:
+    RequestId:
+      description: Request correlation identifier generated or safely accepted by Infer.
+      schema:
+        type: string
   responses:
-    InternalError:
-      description: Infer could not complete the operation.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    Unauthorized:
-      description: A valid Bearer API key is required.
-      headers:
-        X-Request-ID:
-          $ref: '#/components/headers/RequestId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
     Forbidden:
       description: The key, organization, environment, or scope cannot perform this operation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Infer could not complete the operation.
       headers:
         X-Request-ID:
           $ref: '#/components/headers/RequestId'
@@ -381,17 +460,26 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
-  headers:
-    RequestId:
-      description: Request correlation identifier generated or safely accepted by Infer.
-      schema:
-        type: string
+    Unauthorized:
+      description: A valid Bearer API key is required.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: Infer API key
-      description: Workspace API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+      description: Infer API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+    anthropicApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Infer API key accepted on the Anthropic Messages compatibility endpoint. Bearer authentication is also supported.
 externalDocs:
   description: Human-readable Infer API documentation
   url: https://infer.flow7.org/docs

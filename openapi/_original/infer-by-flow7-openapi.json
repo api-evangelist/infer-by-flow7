@@ -1,0 +1,3293 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "Infer by Flow7 Public API",
+    "summary": "Authenticated Responses, Chat Completions, and Anthropic Messages inference plus public catalog/status metadata.",
+    "description": "This description covers Infer's public paid integration surface: authenticated Responses, OpenAI Chat Completions, Anthropic Messages, the authenticated model/receipt APIs, and unauthenticated catalog/status resources. All inference skins share one routing, wallet, cache, media, privacy, and receipt engine. Public registration creates an account; the account email must be verified, the wallet must be funded, and a scoped API key must be created before metered inference. Route availability is dynamic, so read the public status resource immediately before use. Infer does not attest an upstream provider identity.",
+    "termsOfService": "https://infer.flow7.org/terms",
+    "contact": {
+      "name": "Infer by Flow7 support",
+      "url": "https://infer.flow7.org/support"
+    },
+    "version": "0.9.0",
+    "x-infer-access": {
+      "mode": "public-paid",
+      "url": "https://infer.flow7.org/signup",
+      "automaticAccountProvisioning": true,
+      "emailVerificationRequired": true,
+      "fundingRequiredForLiveInference": true
+    },
+    "x-infer-streaming": {
+      "mode": "live-incremental",
+      "providerDeltasForwarded": true,
+      "reasoningDeltas": true,
+      "toolArgumentDeltas": true,
+      "heartbeatSeconds": 15,
+      "inferTotalGenerationDeadline": null,
+      "finalSettlementMetadata": true,
+      "clientDisconnectCancelsUpstream": true,
+      "clientDisconnectCharge": "generated_usage_up_to_reservation"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://infer.flow7.org",
+      "description": "Infer's production origin. Read /api/public/status for current route availability."
+    }
+  ],
+  "externalDocs": {
+    "description": "Human-readable Infer API documentation",
+    "url": "https://infer.flow7.org/docs"
+  },
+  "tags": [
+    {
+      "name": "Inference",
+      "description": "Authenticated customer inference operations."
+    },
+    {
+      "name": "Catalog",
+      "description": "Model selectors, published prices, and route capability metadata."
+    },
+    {
+      "name": "Status",
+      "description": "Customer-facing service state without private routing topology."
+    },
+    {
+      "name": "Usage",
+      "description": "Completed metered usage and charge receipts."
+    }
+  ],
+  "paths": {
+    "/api/public/catalog": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Read the published model and price catalog",
+        "description": "Returns published selectors, pricing metadata, privacy modes, and customer-facing runtime capability fields. A catalog row or published price is not proof that its selector is callable. The response's environment and runtime fields are authoritative. Requests use the live environment; unavailable live routes fail closed. Private routing topology is excluded.",
+        "operationId": "getPublicCatalog",
+        "security": [],
+        "parameters": [
+          {
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "description": "Requested catalog environment. The response environment is live.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published catalog. Inspect each model's runtime status before use.",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCatalog"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/public/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Read customer-facing route status",
+        "description": "Returns an overall state and one state per published service. The simulated field is retained for schema compatibility and is false on the public live service. Private route counts, failure domains, and provider identities are not returned.",
+        "operationId": "getPublicStatus",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Current customer-facing status.",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStatus"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "List live selectors for an API key",
+        "description": "Returns selectors for the authenticated API key. Every returned selector has current public-callable capacity for its exact price option at response time; availability can change, so consult public status immediately before use. The key must carry the inference:write scope.",
+        "operationId": "listModels",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Currently callable live selectors for the authenticated API key.",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/responses": {
+      "post": {
+        "tags": [
+          "Inference"
+        ],
+        "summary": "Create a Responses-style inference request",
+        "description": "Authenticates an Infer API key, validates a canonical model selector and routing policy, reserves the request's spend ceiling, and returns a charge record reference after completion. With stream=true, Infer opens the provider stream before returning HTTP 200, forwards reasoning, text, and function-call deltas in real time, emits keepalive comments during quiet reasoning periods, and places settled usage, cache accounting, final charge, and receipt metadata in response.completed. Infer does not impose a generation wall-clock timeout while the client and upstream connection remain alive; provider-originated timeout/error events remain possible. Client disconnect cancels the upstream stream and reconciles the reservation. Exact model-family selection does not cross into another model family. Route eligibility still depends on current capabilities, privacy, health, authorization, margin, and capacity. Read /api/public/status immediately before use. A response model name, streamed output, charge, or receipt does not attest an upstream provider identity or satisfy Infer's separate strict supplier-evidence standard.",
+        "operationId": "createResponse",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Stable retry key scoped to the organization. The header takes precedence over the body field. When neither is supplied, Infer generates a one-use key; clients that may retry should send a stable value explicitly. A failed operation keeps its key as a terminal failure record; retry that operation with a new key.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "X-Session-Affinity",
+            "in": "header",
+            "required": false,
+            "description": "Optional stable session identifier. relay.session_id in the JSON body takes precedence.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed response as JSON, or Responses events when stream is true. Infer currently assembles the completed upstream result into an SSE event sequence; this description does not promise token-by-token upstream delivery.",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEventStream"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/images/generations": {
+      "post": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Generate one image with GPT Image 2",
+        "operationId": "generateImage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Native image generation with exact per-image reservation before dispatch. The Stable generation price matrix is published in /api/public/catalog. Provider identity and provider asset URLs remain private. URL results use short-lived Infer-signed content URLs; b64_json bytes are returned once and are not retained. Infer performs no automatic paid generation retry. A post-dispatch transport ambiguity leaves the reservation locked rather than guessing about provider spend.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Stable retry key scoped to the organization. Strongly recommended for any paid generation submission. Ambiguous post-dispatch outcomes are never automatically retried.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed image generation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Edit one image using public HTTPS references",
+        "operationId": "editImage",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Native GPT Image 2 editing through either JSON public-HTTPS image references or one multipart PNG/JPEG/WebP upload up to 20 MiB. File bytes are hashed for idempotency, forwarded directly, and never persisted to Neon. Financial and retry semantics are the same as image generation.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Stable retry key scoped to the organization. Strongly recommended for any paid generation submission. Ambiguous post-dispatch outcomes are never automatically retried.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageEditRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageEditMultipartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed image edit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/images/{requestId}/content": {
+      "get": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Read a short-lived signed Infer image asset",
+        "operationId": "getImageContent",
+        "security": [],
+        "description": "Streams the generated image through Infer after validating the short-lived signature. The supplier asset URL is never exposed.",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expires",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PNG image",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "502": {
+            "description": "Upstream asset unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/videos": {
+      "post": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Create an asynchronous Seedance video task",
+        "operationId": "createVideo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Reserves the full per-second Stable price ceiling before native submission. Returns an Infer-owned task id. A five-minute maintenance reconciler polls terminal state even if the client never does. No automatic paid retry is performed.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Stable retry key scoped to the organization. Strongly recommended for any paid generation submission. Ambiguous post-dispatch outcomes are never automatically retried.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Video task accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/videos/{requestId}": {
+      "get": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Read and reconcile a Seedance video task",
+        "operationId": "getVideo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Reads current state for an Infer-owned video task. Terminal completion settles the locked reservation exactly once; terminal failure releases it exactly once. Temporary provider errors leave the reservation intact.",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current video task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/videos/{requestId}/content": {
+      "get": {
+        "tags": [
+          "Generation"
+        ],
+        "summary": "Download a completed video through Infer",
+        "operationId": "getVideoContent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Streams a completed video through Infer to the owning API-key organization. Supplier task ids and content URLs remain private.",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MP4 video",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/usage/receipts/{receiptId}": {
+      "get": {
+        "tags": [
+          "Usage"
+        ],
+        "summary": "Read one completed usage receipt",
+        "description": "Returns a receipt owned by the API key organization. Requires the usage:read scope. Receipt reads remain available when inference is payment-locked so customers can inspect prior charges.",
+        "operationId": "getUsageReceipt",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "receiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Completed usage receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageReceipt"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion",
+        "summary": "Create a chat completion",
+        "description": "OpenAI Chat Completions-compatible skin over the same Infer routing, wallet, privacy, cache, media, tool, and receipt engine used by /v1/responses. With stream=true, chat.completion.chunk events carry upstream reasoning, text, and tool-call argument deltas as they arrive; the final finish chunk includes relay receipt metadata and stream_options.include_usage adds the settled usage chunk. Infer emits keepalive comments during quiet periods and does not impose a generation wall-clock timeout while the connection remains alive.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Optional Infer idempotency key. A one-use key is generated when omitted."
+          },
+          {
+            "name": "X-Session-Affinity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Optional Infer session-affinity/cache-routing extension."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat completion or SSE stream",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionEventStream"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAICompatErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/messages": {
+      "post": {
+        "operationId": "createAnthropicMessage",
+        "summary": "Create an Anthropic-compatible message",
+        "description": "Anthropic Messages-compatible skin over the same Infer routing, wallet, privacy, cache, media, tool, and receipt engine. Accepts the Anthropic SDK x-api-key header or Infer Bearer auth. With stream=true, message_start, thinking/text/tool content_block deltas, message_delta, and message_stop are forwarded incrementally; terminal message_delta includes settled usage and relay receipt metadata. Infer emits ping events during quiet periods and does not impose a generation wall-clock timeout while the connection remains alive.",
+        "security": [
+          {
+            "anthropicApiKey": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Optional Infer idempotency key. A one-use key is generated when omitted."
+          },
+          {
+            "name": "X-Session-Affinity",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Optional Infer session-affinity/cache-routing extension."
+          },
+          {
+            "name": "anthropic-version",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Accepted for Anthropic SDK compatibility. Infer currently normalizes the stable Messages request shape independently of this header."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnthropicMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anthropic message or SSE stream",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicMessageResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicEventStream"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnthropicErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Infer API key",
+        "description": "Infer API key. Do not place it in a URL, prompt, support request, or public diagnostic output."
+      },
+      "anthropicApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Infer API key accepted on the Anthropic Messages compatibility endpoint. Bearer authentication is also supported."
+      }
+    },
+    "headers": {
+      "RequestId": {
+        "description": "Request correlation identifier generated or safely accepted by Infer.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "The request could not be processed.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "A valid Bearer API key is required.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "The wallet cannot cover the request's reservation.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The key, organization, environment, or scope cannot perform this operation.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No active price exists for the requested selector in this environment.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The idempotency key is in progress, expired, or otherwise cannot be replayed.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "The input or request body exceeds a configured limit.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "A selector, input, output limit, session identifier, or routing option is invalid.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "The request rate limit or an API-key spend ceiling was reached.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Retry-After": {
+            "description": "Delay in seconds supplied for coarse request-rate limits.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Infer could not complete the operation.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unavailable": {
+        "description": "Live inference is disabled, no eligible route has capacity, or no route completed within the retry budget.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "request_id"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "PublicStatus": {
+        "type": "object",
+        "required": [
+          "environment",
+          "simulated",
+          "updated_at",
+          "status",
+          "services",
+          "note"
+        ],
+        "properties": {
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "unavailable"
+            ]
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicServiceStatus"
+            }
+          },
+          "note": {
+            "type": "string"
+          },
+          "evidence_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Oldest route-health evidence timestamp supporting the current service-status response."
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicServiceStatus": {
+        "type": "object",
+        "required": [
+          "service",
+          "status",
+          "p95_latency_ms"
+        ],
+        "properties": {
+          "service": {
+            "type": "string",
+            "description": "Published model-family identifier."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "unavailable"
+            ]
+          },
+          "p95_latency_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Conservative observed p95 latency for the published model family across its currently published tiers."
+          },
+          "evidence_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Oldest route-health evidence timestamp supporting this model-family status."
+          }
+        },
+        "additionalProperties": false
+      },
+      "PublicCatalog": {
+        "type": "object",
+        "required": [
+          "currency",
+          "unit",
+          "environment",
+          "simulated",
+          "live_available",
+          "models",
+          "disclosure"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string",
+            "const": "USD"
+          },
+          "unit": {
+            "type": "string",
+            "const": "per_million_tokens"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "live_available": {
+            "type": "boolean",
+            "description": "Whether live inference is enabled globally. This alone does not establish selector callability."
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogModel"
+            }
+          },
+          "disclosure": {
+            "$ref": "#/components/schemas/CatalogDisclosure"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time Infer generated this catalog response and evaluated current callability."
+          },
+          "evidence_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Oldest route-health evidence timestamp among currently published callable model families."
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogModel": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "kind",
+          "environment",
+          "tiers",
+          "runtime"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          },
+          "tiers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CatalogTier"
+            },
+            "description": "Map keyed only by the canonical Infer service policies: low-cost, balanced, stable, and official."
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/CatalogRuntime"
+          }
+        },
+        "description": "Stable integration fields are described explicitly. Additional public presentation and market-reference fields may be present.",
+        "additionalProperties": true
+      },
+      "CatalogTier": {
+        "type": "object",
+        "required": [
+          "tier",
+          "selector",
+          "available",
+          "privacy_modes",
+          "input_per_million_usd",
+          "cached_input_per_million_usd",
+          "cache_write_per_million_usd",
+          "output_per_million_usd",
+          "request_usd",
+          "image_input_usd",
+          "price_version"
+        ],
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": [
+              "low-cost",
+              "balanced",
+              "stable",
+              "official"
+            ],
+            "description": "Canonical customer-facing Infer service policy."
+          },
+          "selector": {
+            "type": "string",
+            "pattern": "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$"
+          },
+          "available": {
+            "type": "boolean",
+            "description": "True only when this exact selector currently has public-callable capacity for the default standard privacy mode. Use the authenticated /v1/models list for actionable live selectors."
+          },
+          "privacy_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "standard",
+                "no-training",
+                "zero-retention"
+              ]
+            }
+          },
+          "input_per_million_usd": {
+            "type": "number"
+          },
+          "cached_input_per_million_usd": {
+            "type": "number"
+          },
+          "cache_write_per_million_usd": {
+            "type": "number",
+            "description": "Customer price per million input tokens written into a provider prompt cache when the selected route reports cache-write usage."
+          },
+          "output_per_million_usd": {
+            "type": "number"
+          },
+          "request_usd": {
+            "type": "number"
+          },
+          "price_version": {
+            "type": "string",
+            "description": "Opaque reference (pv_…) to the immutable price version currently published for this option. Response metadata and usage receipts carry the same reference for requests charged at these rates. It identifies the rate record only and reveals no supplier or cost information."
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/CatalogRuntime"
+          },
+          "image_input_usd": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Per-image input charge when the selected price record has a separate image-input fee. Token-priced image processing may also appear in input usage."
+          },
+          "generation": {
+            "$ref": "#/components/schemas/GenerationPricing"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CatalogRuntime": {
+        "type": "object",
+        "required": [
+          "status",
+          "p95_latency_ms",
+          "max_context_tokens",
+          "max_output_tokens",
+          "max_input_characters",
+          "tools",
+          "structured_outputs",
+          "vision",
+          "streaming",
+          "responses_api",
+          "files",
+          "audio",
+          "video",
+          "image_generation",
+          "video_generation"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "operational",
+              "unavailable"
+            ]
+          },
+          "p95_latency_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Observed p95 latency for the selected tier; model-level runtime uses the conservative maximum across currently published tiers."
+          },
+          "max_context_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "max_output_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "max_input_characters": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Infer's platform input-text character ceiling for this deployment."
+          },
+          "tools": {
+            "type": "boolean"
+          },
+          "structured_outputs": {
+            "type": "boolean"
+          },
+          "vision": {
+            "type": "boolean",
+            "description": "Native image input support through the selected Responses route."
+          },
+          "streaming": {
+            "type": "boolean"
+          },
+          "responses_api": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "boolean",
+            "description": "Native file/PDF input support through the selected Responses route."
+          },
+          "audio": {
+            "type": "boolean",
+            "description": "Native audio input support through the selected Responses route."
+          },
+          "video": {
+            "type": "boolean",
+            "description": "Native video input support through the selected Responses route."
+          },
+          "health_evidence_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Oldest route-health evidence timestamp among routes supporting this runtime profile."
+          },
+          "image_generation": {
+            "type": "boolean",
+            "description": "Native image-generation support through /v1/images/generations and JSON URL-based /v1/images/edits."
+          },
+          "video_generation": {
+            "type": "boolean",
+            "description": "Native asynchronous video-generation support through /v1/videos."
+          }
+        },
+        "additionalProperties": false
+      },
+      "CatalogDisclosure": {
+        "type": "object",
+        "required": [
+          "supplier_identity",
+          "environment",
+          "statement"
+        ],
+        "properties": {
+          "supplier_identity": {
+            "type": "string",
+            "const": "private"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          },
+          "statement": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModelList": {
+        "type": "object",
+        "required": [
+          "object",
+          "data"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Model": {
+        "type": "object",
+        "required": [
+          "id",
+          "object",
+          "owned_by",
+          "relay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$"
+          },
+          "object": {
+            "type": "string",
+            "const": "model"
+          },
+          "owned_by": {
+            "type": "string",
+            "const": "infer"
+          },
+          "relay": {
+            "$ref": "#/components/schemas/ModelPrice"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ModelPrice": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "tier",
+          "input_per_million_usd",
+          "cached_input_per_million_usd",
+          "output_per_million_usd"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "low-cost",
+              "balanced",
+              "stable",
+              "official"
+            ]
+          },
+          "input_per_million_usd": {
+            "type": "number"
+          },
+          "cached_input_per_million_usd": {
+            "type": "number"
+          },
+          "output_per_million_usd": {
+            "type": "number"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/GenerationPricing"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "pattern": "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$",
+            "description": "Canonical selector from the model list or public catalog."
+          },
+          "input": {
+            "$ref": "#/components/schemas/ResponseInput"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Output ceiling, sent upstream and covered by the wallet reservation. When omitted, Infer sets it to the output room of the routes serving the request, at most 32768 tokens. A reply that reaches it ends with status \"incomplete\" and incomplete_details, and is charged for what was generated."
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Responses-style function tools. The selected route must advertise tool support."
+          },
+          "text": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Responses text options, including a structured-output format. Route support is required."
+          },
+          "response_format": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Accepted structured-output shorthand. Route support is required."
+          },
+          "reasoning": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayRequestOptions"
+          },
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Top-level session identifier accepted for compatibility. relay.session_id is preferred."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Body fallback for Idempotency-Key. The header wins when both are present; Infer generates a one-use key when neither is supplied."
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Optional client correlation value.",
+            "maxLength": 200
+          },
+          "cache_control": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Optional provider-compatible prompt-cache control. Cache writes are metered separately. Not allowed with relay.privacy=zero-retention."
+          },
+          "prompt_cache_key": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Optional provider prompt-cache routing key. When relay.session_id is used on a supported native Responses route, Infer also derives a private organization-scoped sticky cache key automatically. Not allowed with zero-retention."
+          },
+          "modalities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional native Responses modality hint. Actual media input is still admitted only when the selected route supports it."
+          }
+        },
+        "description": "Infer documents the stable fields it validates or uses for routing. Prompt-cache controls are supported on compatible routes; cache reads and cache writes are metered separately, and cache controls are rejected when they conflict with zero-retention. Additional Responses fields may pass through on native Responses routes and should not be assumed portable across every selected route.",
+        "additionalProperties": true
+      },
+      "ResponseInput": {
+        "oneOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/components/schemas/ResponseInputItem"
+                }
+              ]
+            }
+          }
+        ],
+        "description": "Text or a list of Infer canonical input items. Message content may include text, image, file/PDF, audio, or video parts. Infer selects an upstream wire protocol per admitted capability; media is never silently discarded.",
+        "examples": [
+          [
+            {
+              "type": "message",
+              "role": "user",
+              "content": [
+                {
+                  "type": "input_text",
+                  "text": "Check the repository state, then use the approved read-only tool."
+                }
+              ]
+            },
+            {
+              "type": "function_call",
+              "call_id": "call_example",
+              "name": "read_repository_state",
+              "arguments": "{}"
+            },
+            {
+              "type": "function_call_output",
+              "call_id": "call_example",
+              "output": "No uncommitted changes."
+            }
+          ]
+        ]
+      },
+      "ResponseInputItem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Responses item type, including message, function_call, or function_call_output."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant",
+              "system",
+              "developer"
+            ]
+          },
+          "content": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InputTextPart"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InputImagePart"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InputFilePart"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InputAudioPart"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InputVideoPart"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "call_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "string"
+          },
+          "output": {}
+        },
+        "description": "Responses input item. Message content supplies extractable text; native tool-loop objects may omit content and use call_id, arguments, or output instead.",
+        "additionalProperties": true
+      },
+      "InputTextPart": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "input_text": {
+            "type": "string"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "text"
+            ]
+          },
+          {
+            "required": [
+              "input_text"
+            ]
+          }
+        ],
+        "additionalProperties": true
+      },
+      "RelayRequestOptions": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "privacy": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "no-training",
+              "zero-retention"
+            ],
+            "default": "standard"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseObject": {
+        "type": "object",
+        "required": [
+          "id",
+          "object",
+          "created_at",
+          "status",
+          "model",
+          "output",
+          "output_text",
+          "usage",
+          "relay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "response"
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "const": "completed"
+          },
+          "model": {
+            "type": "string",
+            "description": "The requested Infer selector. Read relay.resolved_model_class for the class that completed."
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "output_text": {
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ResponseUsage"
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayResponseMetadata"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ResponseUsage": {
+        "type": "object",
+        "required": [
+          "input_tokens",
+          "input_tokens_details",
+          "output_tokens",
+          "output_tokens_details",
+          "total_tokens"
+        ],
+        "properties": {
+          "input_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "input_tokens_details": {
+            "type": "object",
+            "required": [
+              "cached_tokens"
+            ],
+            "properties": {
+              "cached_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cache_write_tokens": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Input tokens written into a provider prompt cache for this request."
+              }
+            },
+            "additionalProperties": true
+          },
+          "output_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "output_tokens_details": {
+            "type": "object",
+            "required": [
+              "reasoning_tokens"
+            ],
+            "properties": {
+              "reasoning_tokens": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": true
+          },
+          "total_tokens": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      },
+      "RelayResponseMetadata": {
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "price_version",
+          "tier",
+          "resolved_model_class",
+          "cache_status",
+          "environment",
+          "provider_disclosed",
+          "customer_cost_usd"
+        ],
+        "properties": {
+          "receipt_id": {
+            "type": "string"
+          },
+          "price_version": {
+            "type": "string",
+            "description": "Opaque reference (pv_…) to the immutable price version that priced this request. It matches the catalog option and the usage receipt and reveals no supplier or cost information."
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "low-cost",
+              "balanced",
+              "stable",
+              "official"
+            ]
+          },
+          "resolved_model_class": {
+            "type": "string"
+          },
+          "cache_status": {
+            "type": "string",
+            "enum": [
+              "hit",
+              "partial",
+              "miss"
+            ]
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "live"
+            ]
+          },
+          "provider_disclosed": {
+            "type": "boolean",
+            "const": false
+          },
+          "customer_cost_usd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "idempotent_replay": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ResponseEventStream": {
+        "type": "string",
+        "description": "Live incremental Responses SSE. Infer forwards upstream reasoning, text, and function-call deltas as they arrive, emits keepalive comments during quiet periods, closes each output item, and ends with response.completed containing settled usage and relay receipt metadata."
+      },
+      "UsageReceipt": {
+        "type": "object",
+        "required": [
+          "id",
+          "object",
+          "request_id",
+          "requested_model",
+          "resolved_model_class",
+          "tier",
+          "price_version",
+          "usage",
+          "rates",
+          "customer_cost_usd",
+          "cache_status",
+          "created_at",
+          "provider_disclosed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "usage.receipt"
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "requested_model": {
+            "type": "string"
+          },
+          "resolved_model_class": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "low-cost",
+              "balanced",
+              "stable",
+              "official"
+            ],
+            "description": "Customer-facing Infer service policy selected for this request."
+          },
+          "price_version": {
+            "type": "string",
+            "description": "Immutable price version reference for the request: an opaque identifier (pv_…) that matches the catalog option and response metadata. It reveals no supplier or cost information."
+          },
+          "usage": {
+            "type": "object",
+            "required": [
+              "input_tokens",
+              "cached_input_tokens",
+              "output_tokens",
+              "cache_write_tokens",
+              "fresh_input_tokens",
+              "image_inputs"
+            ],
+            "properties": {
+              "input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cached_input_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cache_write_tokens": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Input tokens written to prompt cache."
+              },
+              "fresh_input_tokens": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Input tokens charged at the fresh-input rate after cache read/write buckets are removed."
+              },
+              "image_inputs": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of image input parts observed in the admitted request."
+              }
+            },
+            "additionalProperties": false
+          },
+          "rates": {
+            "type": "object",
+            "required": [
+              "input_per_million_usd",
+              "cached_input_per_million_usd",
+              "output_per_million_usd",
+              "cache_write_per_million_usd",
+              "image_input_usd"
+            ],
+            "properties": {
+              "input_per_million_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "cached_input_per_million_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "output_per_million_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "cache_write_per_million_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "image_input_usd": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "customer_cost_usd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cache_status": {
+            "type": "string",
+            "enum": [
+              "miss",
+              "hit",
+              "partial",
+              "write",
+              "response_hit",
+              "not_applicable"
+            ],
+            "description": "Prompt/response cache outcome observed for the request."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "provider_disclosed": {
+            "type": "boolean",
+            "const": false
+          },
+          "generation": {
+            "$ref": "#/components/schemas/GenerationUsage"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InputImagePart": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "input_image"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Image URL or data URL accepted by the upstream Responses model."
+          },
+          "file_id": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "low",
+              "high"
+            ]
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "image_url"
+            ]
+          },
+          {
+            "required": [
+              "file_id"
+            ]
+          }
+        ],
+        "additionalProperties": true,
+        "description": "Responses image input. Infer only admits it to a native Responses route that advertises vision support."
+      },
+      "InputFilePart": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "input_file"
+          },
+          "file_url": {
+            "type": "string"
+          },
+          "file_id": {
+            "type": "string"
+          },
+          "file_data": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "description": "Responses file/PDF input. Route support is required."
+      },
+      "InputAudioPart": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "input_audio"
+          }
+        },
+        "additionalProperties": true,
+        "description": "Provider-compatible Responses audio input. Infer passes the native content object through only when the route advertises audio support."
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "developer",
+              "user",
+              "assistant",
+              "tool",
+              "function"
+            ]
+          },
+          "content": {},
+          "name": {
+            "type": "string"
+          },
+          "tool_call_id": {
+            "type": "string"
+          },
+          "tool_calls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "function_call": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true,
+        "description": "OpenAI-compatible chat message. Text, image_url, input_audio, file, and video_url content parts are normalized into the Infer canonical request."
+      },
+      "ChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "pattern": "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$"
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "max_completion_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap."
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "deprecated": true,
+            "description": "Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap."
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "stream_options": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "top_p": {
+            "type": "number"
+          },
+          "presence_penalty": {
+            "type": "number"
+          },
+          "frequency_penalty": {
+            "type": "number"
+          },
+          "seed": {
+            "type": "integer"
+          },
+          "stop": {},
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "tool_choice": {},
+          "parallel_tool_calls": {
+            "type": "boolean"
+          },
+          "response_format": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "store": {
+            "type": "boolean"
+          },
+          "prompt_cache_key": {
+            "type": "string"
+          },
+          "cache_control": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayRequestOptions"
+          }
+        },
+        "additionalProperties": true,
+        "description": "OpenAI Chat Completions compatibility request. Infer normalizes this into the same canonical request used by /v1/responses; n values other than 1, audio output, prediction, web_search_options, and returned logprobs are not currently supported."
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "object",
+          "created",
+          "model",
+          "choices",
+          "usage",
+          "relay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "chat.completion"
+          },
+          "created": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayResponseMetadata"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ChatCompletionEventStream": {
+        "type": "string",
+        "description": "Live incremental OpenAI-compatible chat.completion.chunk SSE ending with data: [DONE]. Text, reasoning extensions, and tool-call arguments are forwarded as upstream deltas arrive; keepalive comments preserve quiet long-reasoning connections; final usage and relay receipt metadata are emitted only after wallet settlement."
+      },
+      "AnthropicContentBlock": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "description": "Anthropic-compatible content block. Supported input blocks include text, image, document, tool_use, and tool_result."
+      },
+      "AnthropicInputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnthropicContentBlock"
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "AnthropicMessageRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "max_tokens",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "pattern": "^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$"
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/AnthropicInputMessage"
+            }
+          },
+          "system": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnthropicContentBlock"
+                }
+              }
+            ]
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "top_p": {
+            "type": "number"
+          },
+          "top_k": {
+            "type": "integer"
+          },
+          "stop_sequences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "tool_choice": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "thinking": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayRequestOptions"
+          }
+        },
+        "additionalProperties": true,
+        "description": "Anthropic Messages compatibility request. x-api-key and Bearer authentication are both accepted. Custom function tools, images, documents/PDFs, prompt-cache blocks, tool_use/tool_result history, and real-time Anthropic SSE are supported; MCP/container features are not currently exposed."
+      },
+      "AnthropicMessageResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "role",
+          "model",
+          "content",
+          "stop_reason",
+          "stop_sequence",
+          "usage",
+          "relay"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "const": "message"
+          },
+          "role": {
+            "type": "string",
+            "const": "assistant"
+          },
+          "model": {
+            "type": "string"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnthropicContentBlock"
+            }
+          },
+          "stop_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stop_sequence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "usage": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "relay": {
+            "$ref": "#/components/schemas/RelayResponseMetadata"
+          }
+        },
+        "additionalProperties": true
+      },
+      "AnthropicEventStream": {
+        "type": "string",
+        "description": "Live incremental Anthropic-compatible SSE with message_start, thinking/text/tool content_block deltas, message_delta, and message_stop. Ping events preserve quiet long-reasoning connections; final usage and relay receipt metadata are emitted only after wallet settlement."
+      },
+      "AnthropicErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "type",
+          "error",
+          "request_id"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error"
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "type",
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpenAICompatErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message",
+              "type",
+              "param",
+              "code"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "param": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InputVideoPart": {
+        "type": "object",
+        "required": [
+          "type",
+          "video_url"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "input_video"
+          },
+          "video_url": {
+            "type": "string",
+            "description": "Remote video URL or base64 data URL."
+          }
+        },
+        "additionalProperties": true,
+        "description": "Infer video-input extension. On a video-capable selected route Infer may use a verified Chat Completions upstream wire format internally because video is not native to every Responses provider surface."
+      },
+      "GenerationPricing": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "unit",
+          "prices"
+        ],
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "generated_image",
+              "generated_second"
+            ]
+          },
+          "prices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "Customer USD price by generation variant. Image keys use quality:size; video keys use resolution and are per generated second."
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerationRelayMetadata": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          },
+          "receipt_id": {
+            "type": "string"
+          },
+          "price_version": {
+            "type": "string",
+            "description": "Opaque reference (pv_…) to the immutable price version that priced this generation."
+          },
+          "tier": {
+            "type": "string",
+            "const": "stable"
+          },
+          "customer_cost_usd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "reserved_cost_usd": {
+            "type": "number",
+            "minimum": 0
+          },
+          "provider_disclosed": {
+            "type": "boolean",
+            "const": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImageGenerationRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "prompt"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "gpt-image-2 or infer/gpt-image-2:stable. Native image generation is currently Stable-only."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32000
+          },
+          "n": {
+            "type": "integer",
+            "const": 1,
+            "default": 1
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "medium",
+              "high"
+            ],
+            "default": "medium"
+          },
+          "size": {
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "default": "1024x1024",
+            "description": "Must match a currently priced GPT Image 2 size in /api/public/catalog."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "url",
+              "b64_json"
+            ],
+            "default": "url"
+          },
+          "output_format": {
+            "type": "string",
+            "const": "png",
+            "default": "png"
+          },
+          "stream": {
+            "type": "boolean",
+            "const": false,
+            "default": false,
+            "description": "Image SSE is not currently exposed by Infer."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImageEditRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ImageGenerationRequest"
+          },
+          {
+            "type": "object",
+            "required": [
+              "images"
+            ],
+            "properties": {
+              "images": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "image_url"
+                  ],
+                  "properties": {
+                    "image_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Public HTTPS PNG/JPEG/WebP reference image fetched by the generation provider."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        ],
+        "description": "JSON URL-based image editing using one or more public HTTPS reference images."
+      },
+      "ImageGenerationResponse": {
+        "type": "object",
+        "required": [
+          "created",
+          "data"
+        ],
+        "properties": {
+          "created": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Short-lived Infer-signed content URL. Supplier URLs are never returned."
+                },
+                "b64_json": {
+                  "type": "string",
+                  "description": "PNG base64 when response_format=b64_json. Infer does not retain the generated bytes."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "relay": {
+            "$ref": "#/components/schemas/GenerationRelayMetadata"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VideoCreateRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "prompt",
+          "duration",
+          "resolution"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "seedance-2.0 / seedance-2.5, optionally using infer/<model>:stable."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32000
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 4,
+            "description": "Generated seconds. Seedance 2.0 is capped at 15 seconds; 2.5 at 30 seconds."
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 4,
+            "description": "Alias for duration."
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "480p",
+              "720p"
+            ]
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional public HTTPS reference image for image-to-video."
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "VideoObject": {
+        "type": "object",
+        "required": [
+          "id",
+          "task_id",
+          "object",
+          "model",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Infer-owned task id."
+          },
+          "task_id": {
+            "type": "string",
+            "description": "Same Infer-owned task id; upstream task ids remain private."
+          },
+          "object": {
+            "type": "string",
+            "const": "video"
+          },
+          "model": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "pending",
+              "processing",
+              "in_progress",
+              "completed",
+              "failed"
+            ]
+          },
+          "progress": {},
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Authenticated Infer content endpoint after completion."
+              }
+            },
+            "additionalProperties": false
+          },
+          "relay": {
+            "$ref": "#/components/schemas/GenerationRelayMetadata"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GenerationUsage": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "unit",
+          "pricing_key",
+          "units",
+          "customer_unit_usd"
+        ],
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "generated_image",
+              "generated_second"
+            ]
+          },
+          "pricing_key": {
+            "type": "string"
+          },
+          "units": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "customer_unit_usd": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImageEditMultipartRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "prompt",
+          "image"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "gpt-image-2 or infer/gpt-image-2:stable."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32000
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Exactly one PNG, JPEG, or WebP file. Maximum 20 MiB."
+          },
+          "n": {
+            "type": "integer",
+            "const": 1,
+            "default": 1
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "medium",
+              "high"
+            ],
+            "default": "medium"
+          },
+          "size": {
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "default": "1024x1024"
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "url",
+              "b64_json"
+            ],
+            "default": "url"
+          },
+          "output_format": {
+            "type": "string",
+            "const": "png",
+            "default": "png"
+          },
+          "stream": {
+            "type": "boolean",
+            "const": false,
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

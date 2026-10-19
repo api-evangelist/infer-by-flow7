@@ -1,0 +1,12 @@
+{
+ "url": "https://infer.flow7.org/openapi.json",
+ "final": "https://infer.flow7.org/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 99248,
+ "sha256": "e73ecffd3cf370167222a8e6188744d8b5cc870504885f5e6051b9d04e80a27f",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}

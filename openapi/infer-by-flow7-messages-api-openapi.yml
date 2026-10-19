@@ -1,0 +1,351 @@
+openapi: 3.2.0
+info:
+  title: Infer by Flow7 Public Messages API
+  summary: Authenticated Responses, Chat Completions, and Anthropic Messages inference plus public catalog/status metadata.
+  description: 'This description covers Infer''s public paid integration surface: authenticated Responses, OpenAI Chat Completions, Anthropic Messages, the authenticated model/receipt APIs, and unauthenticated catalog/status resources. All inference skins share one routing, wallet, cache, media, privacy, and receipt engine. Public registration creates an account; the account email must be verified, the wallet must be funded, and a scoped API key must be created before metered inference. Route availability is dynamic, so read the public status resource immediately before use. Infer does not attest an upstream provider identity.'
+  termsOfService: https://infer.flow7.org/terms
+  contact:
+    name: Infer by Flow7 support
+    url: https://infer.flow7.org/support
+  version: 0.9.0
+  x-infer-access:
+    mode: public-paid
+    url: https://infer.flow7.org/signup
+    automaticAccountProvisioning: true
+    emailVerificationRequired: true
+    fundingRequiredForLiveInference: true
+  x-infer-streaming:
+    mode: live-incremental
+    providerDeltasForwarded: true
+    reasoningDeltas: true
+    toolArgumentDeltas: true
+    heartbeatSeconds: 15
+    inferTotalGenerationDeadline: null
+    finalSettlementMetadata: true
+    clientDisconnectCancelsUpstream: true
+    clientDisconnectCharge: generated_usage_up_to_reservation
+servers:
+- url: https://infer.flow7.org
+  description: Infer's production origin. Read /api/public/status for current route availability.
+tags:
+- name: Messages
+paths:
+  /v1/messages:
+    post:
+      operationId: createAnthropicMessage
+      summary: Create an Anthropic-compatible message
+      description: Anthropic Messages-compatible skin over the same Infer routing, wallet, privacy, cache, media, tool, and receipt engine. Accepts the Anthropic SDK x-api-key header or Infer Bearer auth. With stream=true, message_start, thinking/text/tool content_block deltas, message_delta, and message_stop are forwarded incrementally; terminal message_delta includes settled usage and relay receipt metadata. Infer emits ping events during quiet periods and does not impose a generation wall-clock timeout while the connection remains alive.
+      security:
+      - anthropicApiKey: []
+      - bearerAuth: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+        description: Optional Infer idempotency key. A one-use key is generated when omitted.
+      - name: X-Session-Affinity
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+        description: Optional Infer session-affinity/cache-routing extension.
+      - name: anthropic-version
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Accepted for Anthropic SDK compatibility. Infer currently normalizes the stable Messages request shape independently of this header.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnthropicMessageRequest'
+      responses:
+        '200':
+          description: Anthropic message or SSE stream
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicMessageResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/AnthropicEventStream'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '401':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '403':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '413':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '422':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '429':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+        '503':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicErrorEnvelope'
+      tags:
+      - Messages
+components:
+  schemas:
+    AnthropicInputMessage:
+      type: object
+      required:
+      - role
+      - content
+      properties:
+        role:
+          type: string
+          enum:
+          - user
+          - assistant
+        content:
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              $ref: '#/components/schemas/AnthropicContentBlock'
+      additionalProperties: true
+    AnthropicMessageRequest:
+      type: object
+      required:
+      - model
+      - max_tokens
+      - messages
+      properties:
+        model:
+          type: string
+          pattern: ^infer/[a-z0-9._/-]+:(low-cost|balanced|stable|official)$
+        max_tokens:
+          type: integer
+          minimum: 1
+          description: Requested output ceiling. Capacity is limited by the selected Infer model/price option and its eligible routes, not by a global Infer token cap.
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AnthropicInputMessage'
+        system:
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              $ref: '#/components/schemas/AnthropicContentBlock'
+        stream:
+          type: boolean
+          default: false
+        temperature:
+          type: number
+        top_p:
+          type: number
+        top_k:
+          type: integer
+        stop_sequences:
+          type: array
+          items:
+            type: string
+        tools:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        tool_choice:
+          type: object
+          additionalProperties: true
+        thinking:
+          type: object
+          additionalProperties: true
+        relay:
+          $ref: '#/components/schemas/RelayRequestOptions'
+      additionalProperties: true
+      description: Anthropic Messages compatibility request. x-api-key and Bearer authentication are both accepted. Custom function tools, images, documents/PDFs, prompt-cache blocks, tool_use/tool_result history, and real-time Anthropic SSE are supported; MCP/container features are not currently exposed.
+    AnthropicEventStream:
+      type: string
+      description: Live incremental Anthropic-compatible SSE with message_start, thinking/text/tool content_block deltas, message_delta, and message_stop. Ping events preserve quiet long-reasoning connections; final usage and relay receipt metadata are emitted only after wallet settlement.
+    RelayResponseMetadata:
+      type: object
+      required:
+      - receipt_id
+      - price_version
+      - tier
+      - resolved_model_class
+      - cache_status
+      - environment
+      - provider_disclosed
+      - customer_cost_usd
+      properties:
+        receipt_id:
+          type: string
+        price_version:
+          type: string
+          description: Opaque reference (pv_…) to the immutable price version that priced this request. It matches the catalog option and the usage receipt and reveals no supplier or cost information.
+        tier:
+          type: string
+          enum:
+          - low-cost
+          - balanced
+          - stable
+          - official
+        resolved_model_class:
+          type: string
+        cache_status:
+          type: string
+          enum:
+          - hit
+          - partial
+          - miss
+        environment:
+          type: string
+          enum:
+          - live
+        provider_disclosed:
+          type: boolean
+          const: false
+        customer_cost_usd:
+          type: number
+          minimum: 0
+        idempotent_replay:
+          type: boolean
+      additionalProperties: true
+    AnthropicMessageResponse:
+      type: object
+      required:
+      - id
+      - type
+      - role
+      - model
+      - content
+      - stop_reason
+      - stop_sequence
+      - usage
+      - relay
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          const: message
+        role:
+          type: string
+          const: assistant
+        model:
+          type: string
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnthropicContentBlock'
+        stop_reason:
+          type:
+          - string
+          - 'null'
+        stop_sequence:
+          type:
+          - string
+          - 'null'
+        usage:
+          type: object
+          additionalProperties: true
+        relay:
+          $ref: '#/components/schemas/RelayResponseMetadata'
+      additionalProperties: true
+    RelayRequestOptions:
+      type: object
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+        privacy:
+          type: string
+          enum:
+          - standard
+          - no-training
+          - zero-retention
+          default: standard
+      additionalProperties: false
+    AnthropicErrorEnvelope:
+      type: object
+      required:
+      - type
+      - error
+      - request_id
+      properties:
+        type:
+          type: string
+          const: error
+        error:
+          type: object
+          required:
+          - type
+          - message
+          properties:
+            type:
+              type: string
+            message:
+              type: string
+          additionalProperties: false
+        request_id:
+          type: string
+      additionalProperties: false
+    AnthropicContentBlock:
+      type: object
+      required:
+      - type
+      properties:
+        type:
+          type: string
+      additionalProperties: true
+      description: Anthropic-compatible content block. Supported input blocks include text, image, document, tool_use, and tool_result.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Infer API key
+      description: Infer API key. Do not place it in a URL, prompt, support request, or public diagnostic output.
+    anthropicApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Infer API key accepted on the Anthropic Messages compatibility endpoint. Bearer authentication is also supported.
+externalDocs:
+  description: Human-readable Infer API documentation
+  url: https://infer.flow7.org/docs

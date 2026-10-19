@@ -1,26 +1,29 @@
 {
   "provider": "infer-by-flow7",
   "sources": [
-    "_original/infer-by-flow7-openapi-public.json"
+    "_original/infer-by-flow7-openapi.json"
   ],
   "outputs": [
     "infer-by-flow7-catalog-api-openapi.yml",
+    "infer-by-flow7-chat-api-openapi.yml",
+    "infer-by-flow7-generation-api-openapi.yml",
     "infer-by-flow7-inference-api-openapi.yml",
-    "infer-by-flow7-status-api-openapi.yml"
+    "infer-by-flow7-messages-api-openapi.yml",
+    "infer-by-flow7-status-api-openapi.yml",
+    "infer-by-flow7-usage-api-openapi.yml"
   ],
   "archived": [],
   "errors": [],
   "warnings": [],
   "notes": [
-    "1 archived document(s) dropped as subsets of other archived documents",
     "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
-    "infer-by-flow7-openapi-public.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
-    "apis.yml register: already-registered"
+    "infer-by-flow7-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "infer-by-flow7-openapi.json: tagged paths POST /v1/chat/completions -> Chat",
+    "infer-by-flow7-openapi.json: tagged paths POST /v1/messages -> Messages",
+    "infer-by-flow7-openapi.json: declared missing tag: Chat",
+    "infer-by-flow7-openapi.json: declared missing tag: Generation",
+    "infer-by-flow7-openapi.json: declared missing tag: Messages",
+    "apis.yml register: written (+4 apis, 7 total)"
   ],
-  "skipped": [
-    "_original/infer-by-flow7-public-api-openapi.yml: archived document superseded by a larger archived document",
-    "infer-by-flow7-catalog-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "infer-by-flow7-inference-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "infer-by-flow7-status-api-openapi.yml: previously refined output, superseded by openapi/_original/"
-  ]
+  "skipped": []
 }

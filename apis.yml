@@ -185,6 +185,46 @@ apis:
     url: changelog/infer-by-flow7-changelog.yml
   - type: Conformance
     url: conformance/infer-by-flow7-conformance.yml
+- aid: infer-by-flow7:infer-by-flow7-generation-api
+  name: Infer by Flow7 Generation API
+  description: The Generation API from Infer by Flow7 — 6 operation(s) for generation.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Generation
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-generation-api-openapi.yml
+- aid: infer-by-flow7:infer-by-flow7-messages-api
+  name: Infer by Flow7 Messages API
+  description: The Messages API from Infer by Flow7 — 1 operation(s) for messages.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Messages
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-messages-api-openapi.yml
+- aid: infer-by-flow7:infer-by-flow7-usage-api
+  name: Infer by Flow7 Usage API
+  description: Completed metered usage and charge receipts.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Usage
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-usage-api-openapi.yml
+- aid: infer-by-flow7:infer-by-flow7-chat-completions-api
+  name: Infer by Flow7 Chat Completions API
+  description: The Chat Completions API from Infer by Flow7 — 1 operation(s) for chat completions.
+  humanURL: https://infer.flow7.org/docs
+  baseURL: https://infer.flow7.org/v1
+  tags:
+  - Chat Completions
+  properties:
+  - type: OpenAPI
+    url: openapi/infer-by-flow7-chat-completions-api-openapi.yml
 maintainers:
   - FN: Infer by Flow7
     org: Flow7
