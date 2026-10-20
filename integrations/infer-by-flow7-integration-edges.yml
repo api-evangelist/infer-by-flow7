@@ -1,0 +1,23 @@
+edges:
+- partner_name: OpenAI
+  partner: openai
+  partner_match: domain
+  type: contract
+  channel: provider-built
+  relationship: compatible
+  direction: provider-built
+  evidence: https://github.com/api-evangelist/infer-by-flow7/blob/main/openapi/infer-by-flow7-chat-completions-api-openapi.yml#L151
+  contract_reference:
+    repo: infer-by-flow7
+    spec_file: infer-by-flow7-chat-completions-api-openapi.yml
+    property: description
+    value: OpenAI-compatible
+    note: 'infer-by-flow7 declares OpenAI compatibility: ''description: OpenAI-compatible chat message. Text, image_url,
+      input_audio, file, and video_url content parts are normalized into the Infer canonical request.'''
+    detected_by: sweep-model-routing.py
+    detected: '2026-10-19'
+  detected_by: sweep-model-routing.py
+  first_seen: '2026-10-19'
+generated: '2026-10-19'
+method: searched
+checked: []
