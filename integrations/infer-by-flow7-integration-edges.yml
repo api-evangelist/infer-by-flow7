@@ -20,4 +20,7 @@ edges:
   first_seen: '2026-10-19'
 generated: '2026-10-19'
 method: searched
-checked: []
+checked:
+- https://github.com/api-evangelist/infer-by-flow7/blob/main/openapi/infer-by-flow7-chat-completions-api-openapi.yml#L151
+source:
+- https://github.com/api-evangelist/infer-by-flow7/blob/main/openapi/infer-by-flow7-chat-completions-api-openapi.yml#L151
