@@ -287,3 +287,9 @@ components:
 externalDocs:
   description: Human-readable Infer API documentation
   url: https://infer.flow7.org/docs
+x-provenance:
+  method: harvested
+  publisher: Infer by Flow7
+  source: https://infer.flow7.org/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
