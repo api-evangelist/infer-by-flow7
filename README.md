@@ -1,4 +1,4 @@
-# Infer by Flow7 (infer-by-flow7)
+# Infer by Flow7
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,99 +66,95 @@
 
 A single Responses-compatible inference API that fronts multiple model families through a private, opaque supplier pool. Public paid beta offering a prepaid-wallet billing model, locked prices, spending limits, and per-call receipts for accountable coding-agent inference. Four operations — two of them unauthenticated — cover a machine-readable price catalog, per-model route status with p95 latency, an authenticated selector list, and the Responses endpoint itself. Distinguished by an unusually legible commercial surface: the full rate card, including per-tier margin floors and dated market-reference discounts, is served as JSON without a key, and every completed request returns a receipt with the locked price version and the exact charge.
 
-**APIs.json:** [https://infer-by-flow7.apievangelist.com/apis.yml](https://infer-by-flow7.apievangelist.com/apis.yml)
+**Areas:** AI/ML inference · LLM API gateway · Responses-compatible API · Coding-agent tooling · Developer Tools · Usage-Based Billing · Prepaid billing · Agent-Native · Agent Skills · Model Routing
 
-## Tags
+## Infer by Flow7 on APIs.io
 
-- AI/ML inference
-- LLM API gateway
-- Responses-compatible API
-- Coding-agent tooling
-- Developer tools
-- Usage-based billing
-- Prepaid billing
-- Agent-native
-- Agent Skills
-- Model routing
+Everything profiled for Infer by Flow7 is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/infer-by-flow7/](https://apis.io/providers/infer-by-flow7/)** — or go straight to one of the APIs or properties below.
 
-## Timestamps
+### APIs (3)
 
-- **Created:** 2026-08-11
-- **Modified:** 2026-08-11
+- [Infer by Flow7 Catalog API](https://apis.io/apis/infer-by-flow7/infer-by-flow7-catalog-api/) — Model selectors, published prices, and route capability metadata.
+- [Infer by Flow7 Inference API](https://apis.io/apis/infer-by-flow7/infer-by-flow7-inference-api/) — Authenticated customer inference operations.
+- [Infer by Flow7 Status API](https://apis.io/apis/infer-by-flow7/infer-by-flow7-status-api/) — Customer-facing service state without private routing topology.
 
-## APIs
+### Published properties
 
-### Infer Responses API
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-Responses-compatible inference REST API fronting many model families through opaque routing, with unauthenticated public catalog/status endpoints and authenticated model-list and Responses endpoints. Includes a public OpenAPI 3.1 contract, RFC 9727 api-catalog, llms.txt, and three published agent skills.
+#### MCP servers (1)
 
-- **Human URL:** [https://infer.flow7.org/docs](https://infer.flow7.org/docs)
-- **Base URL:** `https://infer.flow7.org/v1`
+Model Context Protocol servers that expose the API to agents.
 
-#### Tags
+- [infer-by-flow7-mcp.yml](https://apis.io/servers/infer-by-flow7/infer-by-flow7-mcp-yml/)
 
-- AI/ML inference
-- LLM API gateway
-- Responses-compatible API
-- Coding-agent tooling
-- Developer tools
-- Usage-based billing
-- Prepaid billing
-- Agent-native
-- Agent Skills
-- Model routing
+#### Collections (1)
 
-#### Properties
+Postman and Open Collection request collections.
 
-- [OpenAPI](https://infer.flow7.org/openapi-public.json) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [OpenAPI](openapi/infer-by-flow7-public-api-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/infer-by-flow7-public-api.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/infer-by-flow7-public-api.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
+- [Infer by Flow7 Public API](https://apis.io/collections/infer-by-flow7/open-infer-by-flow7-public-api/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Infer By Flow7 Public Api Overlay](https://apis.io/overlays/infer-by-flow7/infer-by-flow7-public-api-overlay/)
+
+#### Security (4)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Infer By Flow7 Authentication](https://apis.io/security/infer-by-flow7/infer-by-flow7-authentication/)
+- [Infer By Flow7 Domain Security](https://apis.io/security/infer-by-flow7/infer-by-flow7-domain-security/)
+- [Infer By Flow7 Trust Center](https://apis.io/security/infer-by-flow7/infer-by-flow7-trust-center/)
+- [Infer By Flow7 Vulnerability Disclosure](https://apis.io/security/infer-by-flow7/infer-by-flow7-vulnerability-disclosure/)
+
+#### OAuth scopes (1)
+
+The permissions the API asks for.
+
+- [Infer By Flow7 Scopes](https://apis.io/scopes/infer-by-flow7/infer-by-flow7-scopes/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Infer By Flow7 Plans Pricing](https://apis.io/plans/infer-by-flow7/infer-by-flow7-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Infer By Flow7 Rate Limits](https://apis.io/rate-limits/infer-by-flow7/infer-by-flow7-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
 - [Documentation](https://infer.flow7.org/docs)
-- [API Reference](https://infer.flow7.org/docs)
-- [L L Ms Txt](https://infer.flow7.org/llms.txt)
-- [L L Ms Txt](llms/infer-by-flow7-llms.txt)
-- [Agent Skill](https://infer.flow7.org/.well-known/agent-skills/index.json)
-- [Agent Skill](skills/_index.yml)
-- [Authentication](authentication/infer-by-flow7-authentication.yml)
-- [Conventions](conventions/infer-by-flow7-conventions.yml)
-- [Idempotency](conventions/infer-by-flow7-conventions.yml)
-- [Error Catalog](errors/infer-by-flow7-problem-types.yml)
-- [Rate Limits](rate-limits/infer-by-flow7-rate-limits.yml)
-- [Plans](plans/infer-by-flow7-plans-pricing.yml)
-- [Sandbox](sandbox/infer-by-flow7-sandbox.yml)
-- [Data Model](data-model/infer-by-flow7-data-model.yml)
-- [Overlay](overlays/infer-by-flow7-public-api-overlay.yaml)
-- [Lifecycle](lifecycle/infer-by-flow7-lifecycle.yml)
-- [Changelog](changelog/infer-by-flow7-changelog.yml)
-- [Conformance](conformance/infer-by-flow7-conformance.yml)
-
-## Common Properties
-
-- [M C P Server](mcp/infer-by-flow7-mcp.yml)
-- [Domain Security](security/infer-by-flow7-domain-security.yml)
-- [Developer Portal](https://infer.flow7.org/)
-- [Documentation](https://infer.flow7.org/docs)
-- [API Reference](https://infer.flow7.org/docs)
-- [Getting Started](https://infer.flow7.org/docs#quickstart)
-- [Support](https://infer.flow7.org/support)
-- [Blog R S S](https://infer.flow7.org/feed.xml)
+- [Getting started](https://infer.flow7.org/docs#quickstart)
+- [API reference](https://infer.flow7.org/docs)
 - [Pricing](https://infer.flow7.org/models)
-- [Sign Up](https://infer.flow7.org/signup)
-- [Terms of Service](https://infer.flow7.org/terms)
-- [Privacy Policy](https://infer.flow7.org/privacy)
-- [Status Page](https://infer.flow7.org/status)
-- [Status Page](lifecycle/infer-by-flow7-lifecycle.yml)
-- [Well Known](well-known/infer-by-flow7-well-known.yml)
-- [A P I Catalog](https://infer.flow7.org/.well-known/api-catalog)
-- [A P Is J S O N](https://infer.flow7.org/.well-known/apis.json)
-- [Security](security/infer-by-flow7-vulnerability-disclosure.yml)
-- [Vulnerability Disclosure](security/infer-by-flow7-vulnerability-disclosure.yml)
-- [Compliance](conformance/infer-by-flow7-conformance.yml)
-- [Packages](packages/infer-by-flow7-packages.yml)
-- [Changelog](changelog/infer-by-flow7-changelog.yml)
+- [Sign up](https://infer.flow7.org/signup)
+- [Support](https://infer.flow7.org/support)
+- [Terms of service](https://infer.flow7.org/terms)
+- [Privacy policy](https://infer.flow7.org/privacy)
+- [Status](https://infer.flow7.org/status)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** Infer by Flow7
-**URL:** https://infer.flow7.org
+**Unrated** — no public website could be reached for this company, so there was almost nothing to measure and nothing a reader could check.
+
+This is not a score of zero. No rating is published for this company. If that is wrong because something public exists that we missed, say so on this repository or email [info@apievangelist.com](mailto:info@apievangelist.com) and it will be re-run — free, and no justification needed.
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Infer by Flow7: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/infer-by-flow7/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
